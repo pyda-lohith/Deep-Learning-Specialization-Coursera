@@ -1,0 +1,207 @@
+###################################################  Week 1 #####################################
+
+---------------------------------------------Introduction --------------------------
+--------Orthogonalization:
+In this context, orthogonalization refers to that the TV designers had designed the knobs so that each knob does only one thing. And this makes it 
+much easier to tune the TV, so that the picture gets centered where you want it to be.
+
+When using NN try not using early stopping. I personally find early stopping difficult to think about. Because this is an op that simultaneously affects 
+how well you fit the training set, because if you stop early, you fit the training set less well. It also simultaneously is often done to improve your 
+dev set performance. 
+
+------------------------------------------- Setting up your goals -----------------
+----------- Single number evaluation metric:
+Precision=  If classifier A has 95% precision, this means that when classifier A says something is a cat, there's a 95% chance it really is a cat.
+Recall = Of all the images that really are cats, what percentage were correctly recognized by your classifier? So what percentage of actual cats, Are correctly 
+			recognized?
+The problem with using precision recall as your evaluation metric is that if classifier A does better on recall, which it does here, the classifier B 
+does better on precision, then you're not sure which classifier is better.
+
+what I recommend is rather than using two numbers, precision and recall, to pick a classifier, you just have to find a new evaluation metric that combines 
+precision and recall.
+In the machine learning literature, the standard way to combine precision and recall is something called an F1 score. And the details of F1 score aren't 
+too important, but informally, you can think of this as the average of precision, P, and recall, R. Its formula, 2/ 1/P + 1/R. 
+
+Having a dev set + single number evaluation metric distance to speed up iterating. It speeds up iterative process of improving your machine learning algorithm. 
+accuracy is an optimizing metric because you want to maximize accuracy. 
+
+----------- Satisficing 
+In this case accuracy is an optimizing metric because you want to maximize accuracy. You want to do as well as possible on accuracy but that running time is what 
+we call a satisficing metric. Meaning that it just has to be good enough, it just needs to be less than 100 milliseconds and beyond that you don't 
+really care, or at least you don't care that much.  So we choose classifier B.
+
+----------- when to change dev/gtest set
+If you shift Algorithm A the users would see more cat images because you'll see 3 percent error and identify cats, but it also shows the users some 
+pornographic images which is totally unacceptable both for your company, as well as for your users.  In contrast, Algorithm B has 5 percent error so this 
+classifies fewer images but it doesn't have pornographic images. So from your company's point of view, as well as from a user acceptance point of view, 
+Algorithm B is actually a much better algorithm because it's not letting through any pornographic images. Algorithm A is doing better on evaluation metric. 
+It's getting 3 percent error but it is actually a worse algorithm.
+
+One way to change this evaluation metric would be if you add the weight term here, we call this w(i) where w(i) is going to be equal to 1 if x(i) is 
+non-porn and maybe 10 or maybe even large number like a 100 if x(i) is porn. So this way you're giving a much larger weight to examples that are 
+pornographic so that the error term goes up much more if the algorithm makes a mistake on classifying a pornographic image as a cat image.
+
+---------------------------------------------- Comparing to human level performance -------------
+-------------- Why human level performance
+Progress tends to be relatively rapid as you approach human level performance. But then after a while, the algorithm surpasses human-level performance 
+and then progress and accuracy actually slows down. And maybe it keeps getting better but after surpassing human level performance it can still get better, 
+but performance, the slope of how rapid the accuracy's going up, often that slows down. 
+
+Bayes optimal error, or Bayesian optimal error, or sometimes Bayes error for short, is the very best theoretical function for mapping from x to y.That 
+can never be surpassed.
+
+------------- Understanding human level performance
+Human-level error, is that it gives us a way of estimating Bayes error. What is the best possible error any function could, either now or in the 
+future, ever, ever achieve?
+
+whether you use the typical doctor's error or the single experienced doctor's error or the team of experienced doctor's error. Whether this is 4% or 4.5%, 
+this is clearly bigger than the variance problem. And so in this case, you should focus on bias reduction techniques such as train a bigger network.
+
+Whereas this gap is 4%. So this 4% is going to be much bigger than the avoidable bias either way. And so they'll just suggest you should focus on variance 
+reduction techniques such as regularization or getting a bigger training set. 
+
+--------------- Surpassing human level performance
+Is the fact that your training error, 0.3%, does this mean you've over-fitted by 0.2%, or is base error, actually 0.1%, or maybe is base error 0.2%, 
+or maybe base error is 0.3%? You don't really know, but based on the information given in this example, you actually don't have enough information to 
+tell if you should focus on reducing bias or reducing variance in your algorithm. So that slows down the efficiency where you should make progress. 
+
+########################################################### week2 ####################################################################
+
+------------------------------------------------ Error analysis -------------------------
+
+------------  carrying out error analysis
+Manually examining mistakes that your algorithm is making, can give you insights into what to do next. This process is called error analysis. 
+Get about, say 100 mislabeled dev set examples, then examine them manually. Just count them up one at a time, to see how many of these mislabeled examples 
+in your dev set are actually pictures of dogs. Now, suppose that it turns out that 5% of your 100 mislabeled dev set examples are pictures of dogs. 
+So, that is, if 5 out of 100 of these mislabeled dev set examples are dogs, what this means is that of the 100 examples. Of a typical set of 100 examples 
+you're getting wrong, even if you completely solve the dog problem, you only get 5 out of 100 more correct. Or in other words, if only 5% of your errors 
+are dog pictures, then the best you could easily hope to do, if you spend a lot of time on the dog problem. Is that your error might go down from 10% error, 
+down to 9.5% error, right. This is not the best procedure and is called as ceilng of performance
+
+We look at your 100 mislabeled dev set examples, you find that 50 of them are actually dog images. So 50% of them are dog pictures. Now you could be 
+much more optimistic about spending time on the dog problem. In this case, if you actually solve the dog problem, your error would go down from this 10%, 
+down to potentially 5% error.
+
+ so the outcome of this analysis is not that you must work on blurry images. This doesn't give you a rigid mathematical formula that tells you what 
+ to do, but it gives you a sense of the best options to pursue. It also tells you, for example, that no matter how much better you do on dog images, or on 
+ Instagram images. You at most improve performance by maybe 8%, or 12%, in these examples. Whereas you can to better on great cat images, or blurry images, 
+ the potential improvement. 
+ 
+ ------------ Cleaning up incorrectly labelled data
+ If the errors are reasonably random, then it's probably okay to just leave the errors as they are and not spend too much time fixing them. 
+ There's certainly no harm to going into your training set and be examining the labels and fixing them. Sometimes that is worth doing but your effort might 
+ be okay even if you don't.
+ 
+ They are less robust to systematic errors. So for example, if your labeler consistently labels white dogs as cats, then that is a problem because 
+ your classifier will learn to classify all white colored dogs as cats. But random errors or near random errors are usually not too bad for most 
+ deep learning algorithms.
+ 
+ So the question now is, is it worthwhile going in to try to fix up this 6% of incorrectly labeled examples. My advice is, if it makes a significant 
+ difference to your ability to evaluate algorithms on your dev set, then go ahead and spend the time to fix incorrect labels. But if it doesn't make a 
+ significant difference to your ability to use the dev set to evaluate cost buyers, then it might not be the best use of your time.
+
+----------------------------------------------------- Mismatched training and dev/test sets -------------------
+
+------------- Training and testing on different distributions
+So the training set will include 200,000 images from the web and 5,000 from the mobile app. The dev set will be 2,500 images from the mobile app, and 
+the test set will be 2,500 images also from the mobile app. The advantage of this way of splitting up your data into train, dev, and test, is that you're 
+now aiming the target where you want it to be. You're telling your team, my dev set has data uploaded from the mobile app and that's the distribution of 
+images you really care about, so let's try to build a machine learning system that does really well on the mobile app distribution of images.The disadvantage, 
+of course, is that now your training distribution is different from your dev and test set distributions. But it turns out that this split of your data 
+into train, dev and test will get you better performance over the long term.
+
+------------- Bias and variance
+If your dev data came from the same distribution as your training set, you would say that here you have a large variance problem, that your 
+algorithm's just not generalizing well from the training set which it's doing well on to the dev set, which it's suddenly doing much worse on. But In the 
+setting where your training data and your dev data comes from a different distribution, you can no longer safely draw this conclusion.So the problem 
+with this analysis is that when you went from the training error to the dev error, two things changed at a time. One is that the algorithm 
+saw data in the training set but not in the dev set. Two, the distribution of data in the dev set is different. And because you changed two things at the 
+same time, it's difficult to know of this 9% increase in error, how much of it is because the algorithm didn't see the data in the dev set, so that's 
+some of the variance part of the problem. 
+
+What you can conclude from this is that when you went from training data to training dev data the error really went up a lot. And only the difference 
+between the training data and the training-dev data is that your neural network got to sort the first part of this. It was trained explicitly on this, 
+but it wasn't trained explicitly on the training-dev data. So this tells you that you have a variance problem.So you know that even though your 
+neural network does well in a training set, it's just not generalizing well to data in the training-dev set.
+
+----------------------------------------------------- Learning from multiple tasks --------------------
+
+----------- Transfer Learning
+If you want to take this neural network and adapt, or we say transfer, what is learned to a different task, such as radiology diagnosis, meaning really 
+reading X-ray scans, what you can do is take this last output layer of the neural network and just delete that and delete also the weights feeding into 
+that last output layer and create a new set of randomly initialized weights just for the last layer and have that now output radiology diagnosis.
+
+ what you've done in this example, is you've taken knowledge learned from image recognition and applied it or transferred it to radiology diagnosis. And 
+ the reason this can be helpful is that a lot of the low level features such as detecting edges, detecting curves, detecting positive objects. 
+ 
+ when does transfer learning make sense? Transfer learning makes sense when you have a lot of data for the problem you're transferring from 
+ and usually relatively less data for the problem you're transferring to.
+
+--------------- Multi tasking 
+ In this example on the left, there is a stop sign in this image and there is a car in this image but there aren't any pedestrians or traffic lights. 
+ So if this image is an input for an example, x(i), then Instead of having one label y(i), you would actually a four labels. In this example, there are 
+ no pedestrians, there is a car, there is a stop sign and there are no traffic lights. And if you try and detect other things, there may be y(i) has even 
+ more dimensions.
+
+ why I'm saying that with this setting, one image can have multiple labels. If you train a neural network to minimize this cost function, you are 
+ carrying out multi-task learning. Because what you're doing is building a single neural network that is looking at each image and basically solving 
+ four problems. It's trying to tell you does each image have each of these four objects in it. And one other thing you could have done is just 
+ train four separate neural networks, instead of train one network to do four things. But if some of the earlier features in neural network can be 
+ shared between these different types of objects, then you find that training one neural network to do four things results in better performance than 
+ training four completely separate neural networks to do the four tasks separately.
+ 
+ the way you train your algorithm, even when some of these labels are question marks or really unlabeled is that in this sum over j from 1 to 4, 
+ you would sum only over values of j with a 0 or 1 label.So whenever there's a question mark, you just omit that term from summation but 
+ just sum over only the values where there is a label.
+ 
+ In multi-task learning you usually have a lot more tasks than just two. So maybe you have, previously we had 4 tasks but let's say you have 100 tasks. 
+ And you're going to do multi-task learning to try to recognize 100 different types of objects at the same time. So what you may find is that you may 
+ have 1,000 examples per task and so if you focus on the performance of just one task, let's focus on the performance on the 100th task, you can call A100. 
+ If you are trying to do this final task in isolation, you would have had just a thousand examples to train this one task, this one of the 100 tasks that 
+ by training on these 99 other tasks. These in aggregate have 99,000 training examples which could be a big boost, could give a lot of knowledge to argument 
+ this otherwise, relatively small 1,000 example training set that you have for task A100. And symmetrically every one of the other 99 tasks can provide some 
+ data or provide some knowledge that help every one of the other tasks in this list of 100 tasks.
+ 
+To summarize, multi-task learning enables you to train one neural network to do many tasks and this can give you better performance than if you were to 
+do the tasks in isolation. Now one note of caution, in practice I see that transfer learning is used much more often than multi-task learning. So I do 
+see a lot of tasks where if you want to solve a machine learning problem but you have a relatively small data set, then transfer learning can really help. 
+Where if you find a related problem but you have a much bigger data set, you can train in your neural network from there and then transfer it to the 
+problem where we have very low data. So transfer learning is used a lot today.  There are some applications of transfer multi-task learning as well, 
+but multi-task learning I think is used much less often than transfer learning. And maybe the one exception is computer vision object detection, where I 
+do see a lot of applications of training a neural network to detect lots of different objects.
+
+------------------------------------------------- end to end deep learning --------------------------------------
+
+-------- what is end to end deep learning
+So what is the end-to-end learning? Briefly, there have been some data processing systems, or learning systems that require multiple stages of processing. 
+And what end-to-end deep learning does, is it can take all those multiple stages, and replace it usually with just a single neural network.
+
+ It turns out that one of the challenges of end-to-end deep learning is that you might need a lot of data before it works well. So for example, if you're 
+ training on 3,000 hours of data to build a speech recognition system, then the traditional pipeline, the full traditional pipeline works really well. 
+ It's only when you have a very large data set, you know one to say 10,000 hours of data, anything going up to maybe 100,000 hours of data that the
+ end-to end-approach then suddenly starts to work really well.
+ 
+ one thing you could do is try to learn a function mapping directly from the image X to the identity of the person Y. It turns out this is not the best 
+ approach. And one of the problems is that you know, the person approaching the turnstile can approach from lots of different directions. So they could be 
+ green positions, they could be in blue position. You know, sometimes they're closer to the camera, so they appear bigger in the image. And sometimes 
+ they're already closer to the camera, so that face appears much bigger. So what it has actually done to build these turnstiles, is not to just take the 
+ raw image and feed it to a neural net to try to figure out a person's identity.
+
+ Instead, the best approach to date, seems to be a multi-step approach, where first, you run one piece of software to detect the person's face. So this 
+ first detector to figure out where's the person's face. Having detected the person's face, you then zoom in to that part of the image and crop that image 
+ so that the person's face is centered. Then, it is this picture that I guess I drew here in red, this is then fed to the neural network, to then try to 
+ learn, or estimate the person's identity. And what researchers have found, is that instead of trying to learn everything on one step, by breaking 
+ this problem down into two simpler steps, first is figure out where is the face. And second, is look at the face and figure out who this actually is. 
+ This second approach allows the learning algorithm or really two learning algorithms to solve two much simpler tasks and results in overall better performance. 
+ 
+------------ whether to use end to end deep learning 
+One is the data and the other is whatever you hand design, be it components, or features, or other things. And so when you have a ton of data it's less 
+important to hand design things but when you don't have much data, then having a carefully hand-designed system can actually allow humans to inject a lot 
+of knowledge about the problem into an algorithm deck and that should be very helpful. So one of the downsides of end-to-end deep learning is that it 
+excludes potentially useful hand-designed components. And hand-designed components could be very helpful if well designed.
+
+when applying supervised learning you should carefully choose what types of X to Y mappings you want to learn depending on what task you can get data for. 
+And in contrast, it is exciting to talk about a pure end-to-end deep learning approach where you input the image and directly output a steering. But given 
+data availability and the types of things we can learn with neural networks today, this is actually not the most promising approach or this is not an 
+approach that I think teams have gotten to work best. And I think this pure end-to-end deep learning approach is actually less promising than more 
+sophisticated approaches like this, given the availability of data and our ability to train neural networks today. 
