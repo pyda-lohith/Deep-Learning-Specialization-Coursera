@@ -1,0 +1,625 @@
+###################################################### week 1 ###################################
+
+----------------------------------------- Recurrent neural networks
+@@@@@@@@@@@@@@@@@@ Notation
+The input is sequence of 9 words so we have 9 set of features. 
+Tx -> length of input sequence X. i.e 9
+Ty -> length of output sequence Y. i.e 9
+X(i) -> to denote the ith training example 
+X(i)<t> -> to refer to the tth element in the sequence of ith training example. 
+If Tx is the length of a sequence then different examples in your training set can have different lengths. T(i)X
+If Ty is the length of a sequence then different examples in your training set can have different lengths. T(i)y
+
+Lets talk about how to represent individual words like harry in a sentence.
+I'm going to use a dictionary with size 10,000 words. This is quite small by modern NLP applications. For commercial applications, for visual size commercial 
+applications, dictionary sizes of 30 to 50,000 are more common and 100,000 is not uncommon. And then some of the large Internet companies will use dictionary 
+sizes that are maybe a million words or even bigger than that. 
+ 
+What you can do is then use one hot representations to represent each of these words. For example, x-1 which represents the word Harry would be a vector with 
+all zeros except for a 1 in position 4075 because that was the position of Harry in the dictionary.  In this representation x(t) for each of the 
+values of t in a sentence is a one-hot vector. 
+ 
+one last detail, which we'll talk more about in a later video is, what if you encounter a word that is not in your vocabulary? Well the answer is, you create 
+a new token or a new fake word called Unknown Word which under note as follows and go back as UNK to represent words not in your vocabulary, we'll come 
+more to talk more about this later.
+ 
+
+ 
+@@@@@@@@@@@@@@@@@@@ RNN model 
+let's talk about how you can build a model, built a neural network to learn the mapping from x to y. Now, one thing you could do is try to use a 
+standard neural network for this task. So, in our previous example, we had nine input words. 
+
+So, what is a recurrent neural network? Let's build one up. So if you are reading the sentence from left to right, the first word you will read is the 
+some first words say X1, and what we're going to do is take the first word and feed it into a neural network layer. I'm going to draw it like this. So there's a 
+hidden layer of the first neural network and we can have the neural network maybe try to predict the output. So is this part of the person's name or not.
+And to kick off the whole thing, we'll also have some either made-up activation at time zero, this is usually the vector of zeros. Some researchers will 
+initialized a_zero randomly. 
+ 
+Rnn scans the network from left to right and the parameters it uses for each time step are shared. So there'll be a set of parameters which we'll describe in 
+greater detail on the next slide, but the parameters governing the connection from X1 to the hidden layer, will be some set of parameters we're going to write 
+as Wax and is the same parameters Wax that it uses for every time step. Deactivations, the horizontal connections will be governed by some set of parameters Waa 
+and the same parameters Waa use on every timestep and similarly the sum Wya that governs the output predictions.
+
+In order to decide whether or not the word Teddy is part of a person's name, it would be really useful to know not just information from the first two words 
+but to know information from the later words in the sentence as well because the sentence could also have been other way so we use bidirectional network. 
+So one limitation of this particular neural network structure is that the prediction at a certain time uses inputs or uses information from the 
+inputs earlier in the sequence but not information later in the sequence.
+   
+The notation convention I'm going to use for the substrate of these matrices like that example, Wax. The second index means that this Wax is going to be 
+multiplied by some X-like quantity, and this a means that this is used to compute some a-like quantity like so. Similarly, you noticed that here, Wya is 
+multiplied by some a-like quantity to compute a y-type quantity.
+  
+So the way we define Wa is we'll take this matrix Waa, and this matrix Wax, and put them side by side, stack them horizontally as follows, and this will be 
+the matrix Wa. So for example, if a was a 100 dimensional, and in our running example x was 10,000 dimensional, then Waa would have been a 100 by 100 dimensional 
+matrix, and Wax would have been a 100 by 10,000 dimensional matrix. As we're stacking these two matrices together, this would be 100-dimensional. 
+This will be 100, and this would be I guess 10,000 elements. So, Wa will be a 100 by 10100 dimensional matrix. 
+  
+What this notation means, is to just take the two vectors and stack them together. So, when you use that notation to denote that, we're going to take 
+the vector at minus one, so that's a 100 dimensional and stack it on top of at, so, this ends up being a 10100 dimensional vector. So hopefully, you 
+can check for yourself that this matrix times this vector just gives you back the original quantity.
+
+So, the advantage of this notation is that rather than carrying around two parameter matrices, Waa and Wax, we can compress them into just one 
+parameter matrix Wa, and just to simplify our notation for when we develop more complex models.
+   
+@@@@@@@@@@@@@@@@@@@@ back propagation through time
+In order to calculate back propagation we need loss function. So let's define an element-wise loss force, which is supposed for a certain word in the sequence. 
+It is a person's name, so y_t is one. And your neural network outputs some probability of maybe 0.1 of the particular word being a person's name.
+So I'm going to define this as the standard logistic regression loss, also called the cross entropy loss.
+
+So, in a computation graph, to compute the loss given y-hat_1, you can then compute the loss for the first timestep given that you compute the loss for the 
+second timestep, the loss for the third timestep, and so on, the loss for the final timestep. And then lastly, to compute the overall loss, we will take these 
+and sum them all up to compute the final L using that equation, which is the sum of the individual per timestep losses. 
+
+Now, in this back propagation procedure, the most significant message or the most significant recursive calculation is this one, which goes from 
+right to left, and that's why it gives this algorithm as well, a pretty fast full name called backpropagation through time.
+
+@@@@@@@@@@@@@@@@@@@@ Different types of RNN
+So far, you've seen an RNN architecture where the number of inputs, Tx, is equal to the number of outputs, Ty. 
+So it turns out that we could modify the basic RNN architecture to address all of these problems. And the presentation in this video was inspired 
+by a blog post by Andrej Karpathy, titled, The Unreasonable Effectiveness of Recurrent Neural Networks.
+
+One technical now what you see in the later video is that, when you're actually generating sequences, often you take these first synthesized 
+output and feed it to the next layer as well. So the network architecture actually ends up looking like that.
+
+@@@@@@@@@@@@@@@@@@@@@ Language Model and sequence generation
+what a language model does is given any sentence it's job is to tell you what is the probability of a sentence?, of that particular sentence.
+
+so the basic job of a language model is to input a sentence, which I'm going to write as a sequence y(1), y(2) up to y(Ty). And for language model will be 
+useful to represent a sentences as outputs y rather than inputs x. But what the language model does is it estimates the probability of that particular sequence 
+of words.
+
+One thing you might also want to do is model when sentences end. So another common thing to do is to add an extra token called a EOS.EOS token can be 
+appended to the end of every sentence in your training sets if you want your models explicitly capture when sentences end.
+
+Now, one other detail would be what if some of the words in your training set, are not in your vocabulary. So if your vocabulary uses 10,000 words, maybe the 
+10,000 most common words in English, then the term Mau as in the Egyptian Mau is a breed of cat, that might not be in one of your top 10,000 tokens. So in that 
+case you could take the word Mau and replace it with a unique token called UNK or stands for unknown words and would just model, the chance of the unknown 
+word instead of the specific word now.
+
+x(t) = y(t-1) --> will prove this in a while
+
+So what this step does is really, it has a soft max it's trying to predict. What is the probability of any word in the dictionary? That the first one is a? , 
+what's the chance that the first word is Aaron? And then what's the chance that the first word is cats? All the way to what's the chance the first 
+word is Zulu? Or what's the first chance that the first word is an unknown word? Or what's the first chance that the first word is the in the sentence 
+they'll have, shouldn't have to read? Right, so y hat 1 is output to a soft max, it just predicts what's the chance of the first word being, whatever it 
+ends up being.And in our example, it wind up being the word cats, so this would be a 10,000 way soft max output, if you have a 10,000-word vocabulary.
+
+So each step in the RNN will look at some set of preceding words such as, given the first three words, what is the distribution over the next word? And so 
+this RNN learns to predict one word at a time going from left to right. 
+
+Next to train us to a network, we're going to define the cost function. So, at a 
+certain time, t, if the true word was yt and the new networks soft max predicted some y hat t, then this is the soft max loss function that you should 
+already be familiar with. And then the overall loss is just the sum overall time steps of the loss associated with the individual predictions. And if you 
+train this RNN on the last training set, what you'll be able to do is given any initial set of words, such as cats average 15 hours of, it can predict 
+what is the chance of the next word.
+
+Given a new sentence say, y(1), y(2), y(3)with just a three words, for simplicity, the way you can figure out what is the chance of this entire 
+sentence would be. Well, the first soft max tells you what's the chance of y(1).
+
+@@@@@@@@@@@@@@@@@@@@@@@ Sampling novel sequences
+So the network was trained using this structure shown at the top. But to sample, you do something slightly different, so what you want to do is first sample 
+what is the first word you want your model to generate. And so for that you input the usual x1 equals 0, a0 equals 0. And now your first time stamp will have 
+some max probability over possible outputs. So what you do is you then randomly sample according to this soft max distribution. So what the soft max 
+distribution gives you is it tells you what is the chance that it refers to this a?, Aaron? Zulu?, Unknown? word token. Maybe it was a chance it was a end 
+of sentence token. And then you take this vector and use, for example, the numpy command np.random.choice to sample according to distribution defined by 
+this vector probabilities, and that lets you sample the first words.
+
+so how do you know when the sequence ends? Well, one thing you could do is if the end of sentence token is part of your vocabulary, you could keep 
+sampling until you generate an EOS token. And that tells you you've hit the end of a sentence and you can stop. Or alternatively, if you do not include this 
+in your vocabulary then you can also just decide to sample 20 words or 100 words or something, and then keep going until you've reached that number of 
+time steps. And this particular procedure will sometimes generate an unknown word token. If you want to make sure that your algorithm never generates this 
+token, one thing you could do is just reject any sample that came out as unknown word token and just keep resampling from the rest of the vocabulary until 
+you get a word that's not an unknown word. Or you can just leave it in the output as well if you don't mind having an unknown word output.
+
+So far we have been building word level RNN, we can also build charcter level RNN. if you build a character level language model rather than a word level 
+language model, then your sequence y1, y2, y3, would be the individual characters in your training data, rather than the individual words in your training data.
+One advantage of charcter level model is we dont have unknown token unlike the word level model. But we end up with much larger sequence model and also
+computationally expensive to train.
+
+@@@@@@@@@@@@@@@@@@@@@ Vanishing gradient with Rnn
+cat -was cats= were. This is one example of when language can have very long-term dependencies, where it worked at this much earlier can affect what needs 
+to come much later in the sentence.  But it turns out the basics RNN we've seen so far it's not very good at capturing very long-term dependencies.
+Remember if it is very deep NN with 1000 layers then the gradient from just output y, would have a very hard time propagating back to affect the 
+weights of these earlier layers, to affect the computations in the earlier layers. So for RNN we have similar problem. 
+And so in practice, what this means is, it might be difficult to get a neural network to realize that it needs to memorize the just see a 
+singular noun or a plural noun, so that later on in the sequence that can generate either was or were, depending on whether it was singular or plural. 
+So because of this problem, the basic RNN model has many local influences, meaning that the output y^<3> is mainly influenced by values close to y^<3>. And a 
+value here is mainly influenced by inputs that are somewhere close. And it's difficult for the output here to be strongly influenced by an input that was very 
+early in the sequence i.e x(1) and x(2).
+
+you will remember when we talked about very deep neural networks, that we also talked about exploding gradients. We're doing back prop, the gradients should 
+not just decrease exponentially, they may also increase exponentially with the number of layers you go through. It turns out that vanishing gradients tends 
+to be the bigger problem with training RNNs, although when exploding gradients happens, it can be catastrophic because the exponentially large gradients 
+can cause your parameters to become so large that your neural network parameters get really messed up. So it turns out that exploding gradients are easier 
+to spot because the parameters just blow up and you might often see NaNs, or not a numbers, meaning results of a numerical overflow in your neural network 
+computation.  one solution to that is apply gradient clipping. And what that really means, all that means is look at your gradient vectors, and if it 
+is bigger than some threshold, re-scale some of your gradient vector so that is not too big. So there are clips according to some maximum value. 
+
+Exploding gradients, sort by using gradient clipping, but vanishing gradients will take more work to address. So we do in the next video is talk about GRU, the 
+greater recurrent units, which is a very effective solution for vanishing gradient problem,will allow your NN to capture much longer range dependencies.
+
+@@@@@@@@@@@@@@@@@@@@@@@ GRU
+You learn about the Gated Recurrent Unit which is a modification to the RNN hidden layer that makes it much better capturing long range connections and 
+helps a lot with the vanishing gradient problems. 
+ 
+So as we read in this sentence from left to right, the GRU unit is going to have a new variable called c, which stands for cell, for memory cell. 
+And what the memory cell do is it will provide a bit of memory to remember. 
+c(t)  =a(t) --> in GRU
+c(t) != a(t)--> lstm
+At every time-step, we're going to consider overwriting the memory cell with a value c~(t). So this is going to be a candidate for replacing c(t).
+So the gate, I'm going to call gamma u. This is the capital Greek alphabet gamma subscript u, and u stands for update gate, and this will be a value between 
+0 to 1. And to develop your intuition about how GRUs work, think of gamma u, this gate value, as being always 0 or 1. Although in practice, your compute it 
+with a sigmoid function applied to this. So remember that the sigmoid function looks like this. And so it's value is always between 0 and 1. And for most of the 
+possible ranges of the input, the sigmoid function is either very, very close to zero or very, very close to one. So for intuition, think of gamma as being 
+either zero or one most of the time. 
+
+And so the way to think about it is maybe this memory cell c is going to be set to either zero or one depending on whether the word you are considering, 
+really the subject of the sentence is singular or plural. So because it's singular, let's say that we set this to one. And if it was plural, maybe we would 
+set this to zero, and then the GRU unit would memorize the value of the c<t> all the way until here, where this is still equal to one and so that tells it, 
+oh, it's singular so use the choice was. And the job of the gate, of gamma u, is to decide when do you update these values. 
+
+So you notice that if the gate, if this update value=1 , then it's saying set the new value of c<t> equal to this candidate value. So that's like over here, 
+set gate=1 so go ahead and update that bit. And then for all of these values in the middle, you should have the gate=0. So this is saying don't update it, d
+on't update it, don't update it, just hang onto the old value. Because if gamma u = zero, then this would be zero, and this would be one. And so it's just 
+setting c<t> equal to the old value, even as you scan the sentence from left to right. So when the gate is equal to zero, we're saying don't update it, 
+don't update it, just hang on to the value and don't forget what this value was. And so that way even when you get all the way down here, hopefully you've 
+just been setting c<t> equals c<t> minus one all along. And it still memorizes, the cat was singular. 
+
+with some appropriate weighting and some tanh, this gives you c~(t) which is a candidate for placing c<t>, and then with a different set of parameters and 
+through a sigmoid activation function, this gives you gamma u, which is the update gate. And then finally, all of these things combine together through 
+another operation.
+
+What is remarkably good at is through the gates deciding that when you're scanning the sentence from left to right say, that's a good time to update one 
+particular memory cell and then to not change, not change it until you get to the point where you really need it to use this memory cell that is set even 
+earlier in the sentence. And because the sigmoid value, now, because the gate is quite easy to set to zero right. So long as this quantity is a large negative
+value, then up to numerical around off the uptake gate will be essentially zero. Very, very, very close to zero. So when that's the case, then this updated 
+equation and subsetting c<t> equals c<t-1>. And so this is very good at maintaining the value for the cell. And because gamma can be so close to zero, can 
+be 0.000001 or even smaller than that, it doesn't suffer from much of a vanishing gradient problem. Because when you say gamma so close to zero this becomes 
+essentially c<t> equals c<t-1> and the value of c<t> is maintained pretty much exactly even across many many many many time-steps. So this can help 
+significantly with the vanishing gradient problem and therefore allow a neural network to go on even very long range dependencies, such as a cat and was 
+related even if they're separated by a lot of words in the middle.
+
+c<t> can be a vector. So if you have 100 dimensional or hidden activation value then c<t)= 100 dimensional say. c~(t) and gamma will be 100 dimensional. 
+And in that case, these asterisks are actually element wise multiplication. So here if gamma u, if the gate is 100 dimensional vector, what it is 
+really a 100 dimensional vector of bits, the value is mostly zero and one. That tells you of this 100 dimensional memory cell which are the bits you want to 
+update. And, of course, in practice gamma won't be exactly zero or one. Sometimes it takes values in the middle as well but it is convenient for intuition to 
+think of it as mostly taking on values that are exactly zero, pretty much exactly zero or pretty much exactly one. And what these element wise multiplications 
+do is it just element wise tells the GRU unit which other bits in your- It just tells your GRU which are the dimensions of your memory cell vector to update 
+at every time-step. So you can choose to keep some bits constant while updating other bits. 
+
+Original GRU equation.
+Another gate gamma r. You can think of r as standing for relevance. So this gate gamma r tells you how relevant is c<t-1> to computing the next candidate for 
+c<t>. And this gate gamma r is computed pretty much as you'd expect with a new parameter matrix Wr, and then the same things as input x<t> plus br.
+
+@@@@@@@@@@@@@@@@@ LSTM
+The other type of unit that allows you to do this very well is the LSTM or the long short term memory units, and this is even more powerful than the GRU.
+
+One new property of the LSTM is, instead of having one update gate control, both of these terms, we're going to have two separate terms. So instead of 
+gamma_u and (1-gamma_u), we're going have gamma_u here. And forget gate, which we're going to call gamma_f. So, this gate, gamma_f, is going to be sigmoid of 
+pretty much what you'd expect, x_t plus b_f. And then, we're going to have a new output gate which is sigma of W_o. And then again, pretty much what you'd 
+expect, plus b_o. And then, the update value to the memory so will be c_t equals gamma u. And this asterisk denotes element-wise multiplication. This is a 
+vector-vector element-wise multiplication, plus, and instead of (1-gamma_u), we're going to have a separate forget gate, gamma_f, times c(t-1). So this gives 
+the memory cell the option of keeping the old value c(t-1) and then just adding to it, this new value, c~(t).  So, use a separate update and forget gates. 
+
+One cool thing about this you'll notice is that there's this line at the top that shows how, so long as you set the forget and the update gate appropriately, 
+it is relatively easy for the LSTM to have some value c_0 and have that be passed all the way to the right to have your, maybe, c_3 = c_0. And this is why
+the LSTM, as well as the GRU, is very good at memorizing certain values even for a long time, for certain real values stored in the memory cell even for 
+many, many timesteps.
+
+As you can imagine, there are also a few variations on this that people use. Perhaps, the most common one is that instead of just having the gate values 
+be dependent only on a(t-1), x_t, sometimes, people also sneak in there the values c(t-1) as well. This is called a peephole connection.
+
+So if you have a 100-dimensional hidden memory cell unit, and so is this. And the, say, fifth element of c(t-1) affects only the fifth element of the 
+corresponding gates, so that relationship is one-to-one, where not every element of the 100-dimensional c(t-1) can affect all elements of the case. 
+But instead, the first element of c(t-1) affects the first element of the case, second element affects the second element, and so on. But if you ever 
+read the paper and see someone talk about the peephole connection, that's when they mean that c_t minus one is used to affect the gate value as well.
+
+Note: For the signal to backpropagate without vanishing, we need c<t> to be highly dependant on c<t-1>
+
+@@@@@@@@@@@@@@@@@ Bidirectional Rnn
+So this is a unidirectional or forward directional only RNN. And, this comment I just made is true, whether these cells are standard RNN blocks or 
+whether they're GRU units or whether they're LSTM blocks. But all of these blocks are in a forward only direction.
+
+Notice that this network defines a Acyclic graph. And so, given an input sequence, X(1) to X(4), the fourth sequence will first compute a(1), then use that 
+to compute a(2),then a(3), then a(4). Whereas, the backward sequence would start by computing a(4), and then go back and compute a(3), and then as you are 
+computing network activation, this is not backward this is forward prop. But the forward prop has part of the computation going from left to right and part 
+of computation going from right to left in this diagram.
+
+So this is the bidirectional RNN and these blocks here can be not just the standard RNN block but they can also be GRU blocks or LSTM blocks. In fact, for a 
+lots of NLP problems, for a lot of text with natural language processing problems, a bidirectional RNN with a LSTM appears to be commonly used. So, we have 
+NLP problem and you have the complete sentence, you try to label things in the sentence, a bidirectional RNN with LSTM blocks both forward and backward would 
+be a pretty views of first thing to try.
+
+@@@@@@@@@@@@@@@@@@@ Deep RNN
+The different versions of RNNs you've seen so far will already work quite well by themselves. But for learning very complex functions sometimes is useful 
+to stack multiple layers of RNNs together to build even deeper versions of these models.
+
+Instead of writing this as a0 for the activation time zero, I've added this square bracket 1 to denote that this is for layer one.
+a[l]<t> --> activation associated with layer L and <t> denoted for time t.
+This will be NN with 3 Hidden layers. 
+a[2]<3> has 2 inputs a[2]<2> and a[1]<3>. 
+
+For RNNs, having three layers is already quite a lot. Because of the temporal dimension, these networks can already get quite big even if you have just a 
+small handful of layers. And you don't usually see these stacked up to be like 100 layers.  One thing you do see sometimes is that you have recurrent layers 
+that are stacked on top of each other. But then you might take the output here, let's get rid of this, and then just have a bunch of deep layers that are not 
+connected horizontally but have a deep network here that then finally predicts y<1>.  So this is a type of network architecture that we're seeing a little bit 
+more where you have three recurrent units that connected in time, followed by a network, followed by a network after that, as we seen for y<3> and y<4>, of 
+course. There's a deep network, but that does not have the horizontal connections
+
+###################################################### week 2 ###################################
+
+------------------------------------- Natural Language Processing & Word Embeddings
+@@@@@@@@@@@@@@@@@@@ Introduction to word embedding
+
+Earlier we have represented using one-hot vector for each word.  One of the weaknesses of this representation is that it treats each word as a thing 
+until itself, and it doesn't allow an algorithm to easily generalize the cross words.  As far as it knows the relationship between apple and orange is not 
+any closer as the relationship between any of the other words man, woman, king, queen, and orange. And so, it's not easy for the learning algorithm to 
+generalize from knowing that orange juice is a popular thing, to recognizing that apple juice might also be a popular thing or a popular phrase. 
+And this is because the any product between any two different one-hot vector is zero. So, won't it be nice if instead of a one-hot presentation we can instead 
+learn a featurized representation with each of these words, a man, woman, king, queen, apple, orange or really for every word in the dictionary, we could 
+learn a set of features and values for each of them.
+
+they can be many other features as well ranging from, what is the size of this? What is the cost? Is this something that is a live? Is this an action, or is 
+this a noun, or is this a verb, or is it something else? And so on. 
+
+Now, if you use this representation to represent the words orange and apple, then notice that the representations for orange and apple are now quite similar. 
+Some of the features will differ because of the color of an orange, the color an apple, the taste, or some of the features would differ. But by a large, a lot 
+of the features of apple and orange are actually the same, or take on very similar values. And so, this increases the odds of the learning algorithm that has 
+figured out that orange juice is a thing, to also quickly figure out that apple juice is a thing.  So this allows it to generalize better across different words. 
+
+Exactly what they're representing will be a bit harder to figure out. But nonetheless, the featurized representations we will learn, will allow an algorithm 
+to quickly figure out that apple and orange are more similar than say, king and orange or queen and orange. If we're able to learn a 300 dimensional feature 
+vector or 300 dimensional embedding for each words, one of the popular things to do is also to take this 300 dimensional data and embed it say, in a 2D space so 
+that you can visualize them. And so, one common algorithm for doing this is the t-SNE algorithm due to Laurens van der Maaten and Geoff Hinton.
+
+But you see plots like these sometimes on the internet to visualize some of these 300 or higher dimensional embeddings. And maybe this gives you a sense that, 
+word embeddings algorithms like this can learn similar features for concepts that feel like they should be more related, as visualized by that concept that 
+seem to you and me like they should be more similar, end up getting mapped to a more similar feature vectors. And these representations will use these sort of 
+featurized representations in maybe a 300 dimensional space, these are called embeddings. And the reason we call them embeddings is, you can think of a 300 
+dimensional space. And again, they can't draw out here in two dimensional space because it's a 3D one. And what you do is you take every words like orange, 
+and have a three dimensional feature vector so that word orange gets embedded to a point in this 300 dimensional space. And the word apple, gets embedded to a 
+different point in this 300 dimensional space. And of course to visualize it, algorithms like t-SNE, map this to a much lower dimensional space, you can 
+actually plot the 2D data and look at it.
+
+@@@@@@@@@@@@@@@@@@@@@@@  Properties of word embedding
+Let me show you what I mean here are the featurized representations of a set of words that you might hope a word embedding could capture. 
+
+So let's formalize how you can turn this into an algorithm. In pictures, the word embeddings live in maybe a 300 dimensional space. And so the word man is 
+represented as a point in the space, and the word woman is represented as a point in the space. Same way king and queen. And what we pointed out really on the 
+last slide is that the vector difference between man and woman is very similar to the vector difference between king and queen. And this arrow I just drew is 
+really the vector that represents a difference in gender.  We try to find the word wi , This equation holds true, so you want there to be, A high degree of 
+a similarity, between I'm going to use similarity. If you learn a set of word embeddings and find a word w that maximizes this type of similarity, you 
+can actually get the exact right answer.
+
+Previously, we talked about using algorithms like t-SAE to visualize words. What t-SAE does is, it takes 300-D data, and it maps it in a very non-linear way 
+to a 2D space. And so the mapping that t-SAE learns, this is a very complicated and very non-linear mapping. So after the t-SAE mapping, you should not 
+expect these types of parallelogram relationships, like the one we saw on the left, to hold true. And many of the parallelogram analogy relationships will 
+be broken by t-SAE. 
+
+So the most commonly used similarity function is called cosine similarity. So this is the equation we had from the previous slide.  So ignoring the denominator 
+for now, this is basically the inner product between u and v. And so if u and v are very similar, their inner product will tend to be large. And this is 
+called cosine similarity. 
+
+cosine similarity works quite well for these analogy reasoning tasks.  If you want, you can also use square distance or Euclidian distance, u-v squared. 
+Technically, this would be a measure of dissimilarity rather than a measure of similarity. So we need to take the negative of this, and this will work okay 
+as well. 
+
+all of these things can be learned just by running a word embedding learning algorithm on the large text corpus. It can spot all of these patterns by itself, 
+just by running from very large bodies of text. 
+
+@@@@@@@@@@@@@@@@@@@@@ Embedding matrix
+When you implement an algorithm to learn a word embedding, what you end up learning is an embedding matrix. 
+
+Let's say, as usual we're using our 10,000-word vocabulary.  What we're going to do is learn embedding matrix E, which is going to be a 300 dimensional by 
+10,000 dimensional matrix, if you have 10,000 words vocabulary. So, Orange was word number 6257 in our vocabulary of 10,000 words. So, one piece of notation 
+we'll use is that 06257 was the one-hot vector with zeros everywhere and a one in position 6257 with 10000*1 dimensional. Multiply E with one-hot vector 
+by O6257. 
+
+So, that's why the embedding matrix E times this one-hot vector here winds up selecting out this 300-dimensional column corresponding to the word Orange. 
+So, this is going to be equal to e6257 which is the notation we're going to use to represent the embedding vector that 300 by one dimensional vector for the 
+word Orange.  
+
+So, the thing to remember from this slide is that our goal will be to learn an embedding matrix E and what you see in the next video is you initialize E 
+randomly and you're straight in the sense to learn all the parameters of this 300 by 10,000 dimensional matrix and E times this one-hot vector gives you the 
+embedding vector.
+
+But if when you're implementing this, it is not efficient to actually implement this as a mass matrix vector multiplication because the one-hot vectors, now 
+this is a relatively high dimensional vector and most of these elements are zero. So, it's actually not efficient to use a matrix vector multiplication to 
+implement this because if we multiply a whole bunch of things by zeros and so the practice, you would actually use a specialized function to just look up 
+a column of the Matrix E rather than do this with the matrix multiplication. But writing out the math, it is just convenient to write it out this way. 
+So, in keras for example there is a embedding layer and we use the embedding layer then it more efficiently just pulls out the column you want from the 
+embedding matrix rather than does it with a much slower matrix vector multiplication.
+
+
+------------------------------------------------------------  Learning word embeddings
+@@@@@@@@@@@@@@@@@@@@@@@ Learning word embeddings
+start to learn some concrete algorithms for learning word embeddings.  So now you have a bunch of three dimensional embedding, so each of this is a 300 
+dimensional embedding vector. And what we can do, is fill all of them into a neural network. So here is the neural network layer. And then this neural network 
+feeds to a softmax, which has it's own parameters as well. And a softmax classifies among the 10,000 possible outputs in the vocab for those final word we're 
+trying to predict.
+
+I'm going to call this W1 and there's also B1. The softmax there was this own parameters W2, B2, and they're using 300 dimensional word embeddings, then here 
+we have six words. So, this would be six times 300. So this layer or this input will be a 1,800 dimensional vector obtained by taking your six embedding vectors
+and stacking them together.  So for example, you might decide that you always want to predict the next word given say the previous four words, where four here 
+is a hyperparameter of the algorithm. So this is how you adjust to either very long or very short sentences or you decide to always just look at the previous 
+four words, so you say, I will still use those four words. And so, let's just get rid of these. And so, if you're always using a four word history, this means 
+that your neural network will input a 1,200 dimensional feature vector, go into this layer, then have a softmax and try to predict the output.
+
+So, the parameters of this model will be this matrix E, and use the same matrix E for all the words. So you don't have different matrices for different 
+positions in the proceedings four words, is the same matrix E. And then, these weights are also parameters of the algorithm and you can use that crop to 
+perform gradient to sent to maximize the likelihood of your training set to just repeatedly predict given four words in a sequence, what is the next word in 
+your text corpus? And it turns out that this algorithm we'll learn pretty decent word embeddings.
+ 
+Some might say, I saw the word glass and then there's another words somewhere close to glass, what do you think that word is? So, that'll be using nearby one 
+word as the context. And we'll formalize this in the next video but this is the idea of a Skip-Gram model, and just an example of a simpler algorithm where 
+the context is now much simpler, is just one word rather than four words, but this works remarkably well.
+
+So what researchers found was that if you really want to build a language model, it's natural to use the last few words as a context.But if your main goal 
+is really to learn a word embedding, then you can use all of these other contexts and they will result in very meaningful work embeddings as well.
+
+@@@@@@@@@@@@@@@@@@@@@ Word2Vec
+In the skip-gram model, what we're going to do is come up with a few context to target errors to create our supervised learning problem. So rather than 
+having the context be always the last four words or the last end words immediately before the target word, what I'm going to do is, say, randomly pick a word 
+to be the context word. And let's say we chose the word orange. And what we're going to do is randomly pick another word within some window. Say plus minus 
+five words or plus minus ten words of the context word and we choose that to be target word.  So maybe just by chance you might pick juice to be a target 
+word, that's just one word later. Or you might choose two words before. So you have another pair where the target could be glass or Maybe just by chance you 
+choose the word my as the target. 
+
+Softmax primary problem is computational speed. In particular, for the softmax model, every time you want to evaluate this probability, you need to carry out 
+a sum over all 10,000 words in your vocabulary. And maybe 10,000 isn't too bad, but if you're using a vocabulary of size 100,000 or a 1,000,000, it gets really 
+slow to sum up over this denominator every single time. 
+
+Few solutions to this, one which you see in the literature is to use a hierarchical softmax classifier. And what that means is, instead of trying to categorize 
+something into all 10,000 carries on one go. Imagine if you have one classifier, it tells you is the target word in the first 5,000 words in the vocabulary? Or 
+is in the second 5,000 words in the vocabulary? And lets say this binary cost that it tells you this is in the first 5,000 words, think of second class to tell 
+you that this in the first 2,500 words of vocab or in the second 2,500 words vocab and so on. Until eventually you get down to classify exactly what word 
+it is, so that the leaf of this tree, and so having a tree of classifiers like this, means that each of the retriever nodes of the tree can be just a binding 
+classifier. 
+
+In practice, the hierarchical softmax classifier doesn't use a perfectly balanced tree or this perfectly symmetric tree, with equal numbers of words on the 
+left and right sides of each branch. In practice, the hierarchical software classifier can be developed so that the common words tend to be on top, whereas the 
+less common words like durian can be buried much deeper in the tree. Because you see the more common words more often, and so you might need only a few 
+traversals to get to common words like the and of.
+
+Negative sampling also works really well for speeding up the softmax classifier and the problem of needing the sum over the entire cap size in the denominator. 
+
+how do you choose the context C? one thing is take the common words as one set so, if you do that, you find that in your context to target mapping pairs just 
+get these these types of words extremely frequently. Other words like orange, apple, and also durian that don't appear that often And maybe you don't want your 
+training site to be dominated by these extremely frequently or current words, because then you spend almost all the effort updating ec, for those frequently 
+occurring words.
+
+@@@@@@@@@@@@@@@@@@@ Negative sampling
+Given a pair of words like orange and juice, we're going to predict, is this a context-target pair? 1 for positive example and 0 for negative example. 
+So to summarize, the way we generated this data set is, we'll pick a context word and then pick a target word and that is the first row of this table. That 
+gives us a positive example. So context, target, and then give that a label of 1. And then what we'll do is for some number of times say, k times, we're going 
+to take the same context word and then pick random words from the dictionary, king, book, the, of, whatever comes out at random from the dictionary and label 
+all those 0, and those will be our negative examples.  we're going to create a supervised learning problem where the learning algorithm inputs x, inputs this 
+pair of words, and it has to predict the target label to predict the output y.
+
+How do you choose k, Mikolov, recommend that maybe k is 5 to 20 for smaller data sets. And if you have a very large data set, then chose k to be smaller. 
+So k equals 2 to 5 for larger data sets, and large values of k for smaller data sets. Okay, and in this example, I'll just use k = 4.
+
+Next, let's describe the supervised learning model for learning a mapping from x to y. Say, that the chance of y = 1, given the input c, t pair, we're going to 
+model this as basically a regression model, but the specific formula we'll use s sigma applied to theta transpose, theta t transpose, e c. So the parameters 
+are similar as before, you have one parameter vector theta for each possible target word. And a separate parameter vector, really the embedding vector, for 
+each possible context word. And we're going to use this formula to estimate the probability that y is equal to 1. So if you have k examples here, then you can 
+think of this as having a k to 1 ratio of negative to positive examples. So for every positive examples, you have k negative examples with which to train this 
+logistic regression-like model.
+
+We're going to train the one responding to the actual target word we got and then train four randomly chosen negative examples. And this is for the case where 
+k is equal to 4. So instead of having one giant 10,000 way Softmax, which is very expensive to compute, we've instead turned it into 10,000 binary classification
+problems, each of which is quite cheap to compute. And on every iteration, we're only going to train five of them or more generally, k + 1 of them, of k negative
+examples and one positive examples
+
+how do you choose the negative examples? So one thing you could do is sample the words in the middle, the candidate target words. One thing you could do is 
+sample it according to the empirical frequency of words in your corpus. So just sample it according to how often different words appears. But the problem with 
+that is that you end up with a very high representation of words like the, of, and, and so on. One other extreme would be to say, you use 1 over the vocab size, 
+sample the negative examples uniformly at random, but that's also very non-representative of the distribution of English words. So the authors, Mikolov,reported 
+that empirically, what they found to work best was to take this heuristic value, which is a little bit in between the two extremes of sampling from the empirical
+frequencies, meaning from whatever's the observed distribution in English text to the uniform distribution. 
+
+@@@@@@@@@@@@@@@@@@@@@@@ Glove word vector
+X_ij be the number of times that a word i appears in the context of j. And so, here i and j play the role of t and c, so you can think of X_ij as being 
+x subscript tc. But, you can go through your training corpus and just count up how many words does a word i appear in the context of a different word j. How 
+many times does the word t appear in context of different words c. And depending on the definition of context and target words, you might have that X_ij== X_ji.
+X_ij and X_ji may not be symmetric if context and target word are next to each other.  X_ij and X_ji would be symmetric if context and target appear within 
+plus minus 10 words of each other. 
+
+So what the GloVe model does is, it optimizes the following. We're going to minimize the difference between theta i transpose e_j minus log of X_ij squared.
+solve for parameters theta and e using gradient descent to minimize the sum over i equals one to 10,000 sum over j from one to 10,000 of this difference.
+So you just want to learn vectors, so that their end product is a good predictor for how often the two words occur together. 
+
+weighting factor can be a function that gives a meaningful amount of computation, even to the less frequent words like durion, and gives more weight but 
+not an unduly large amount of weight to words like, this, is, of, a, which just appear lost in language.  there are various heuristics for choosing this 
+weighting function F that need or gives these words too much weight nor gives the infrequent words too little weight.
+ 
+But when you learn a word embedding using one of the algorithms that we've seen, such as the GloVe algorithm that we just saw on the previous slide, what 
+happens is, you cannot guarantee that the individual components of the embeddings are interpretable. Why is that? Well, let's say that there is some space where
+the first axis is gender and the second axis is royal. What you can do is guarantee that the first axis of the embedding vector is aligned with this axis of 
+meaning, of gender, royal, age and food. And in particular, the learning algorithm might choose this to be axis of the first dimension. So, given maybe a context 
+of words, so the first dimension might be this axis and the second dimension might be this. Or it might not even be orthogonal, maybe it'll be a second 
+non-orthogonal axis, could be the second component of the word embeddings you actually learn. you can't guarantee that the axis used to represent the features 
+will be well-aligned with what might be easily humanly interpretable axis.
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@ application of word embedding
+Now here's one way to build a classifier, which is that you can take these vectors, let's say these are 300-dimensional vectors, and you could then just 
+sum or average them. And I'm just going to put a bigger average operator here and you could use sum or average. this gives you a 300-dimensional feature vector 
+that you then pass to a soft-max classifier which then outputs Y-hat. 
+
+what it does is it really averages the meanings of all the words or sums the meaning of all the words in your example.  In particular, this is a very negative 
+review, "Completely lacking in good taste, good service, and good ambiance". But the word good appears a lot. This is a lot. Good, good, good. So if you use an 
+algorithm like this that ignores word order and just sums or averages all of the embeddings for the different words, then you end up having a lot of the 
+representation of good in your final feature vector and your classifier will probably think this is a good review even though this is actually very harsh.
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Debaising word embedding
+Machine learning and AI algorithms are increasingly trusted to help with, or to make, extremely important decisions. And so we like to make sure that as much as 
+possible that they're free of undesirable forms of bias, such as gender bias, ethnicity bias and so on.
+
+The distance, or the similarity, between babysitter and grandmother is actually smaller than the distance between babysitter and grandfather. And so this maybe 
+reinforces an unhealthy, or maybe undesirable, bias that grandmothers end up babysitting more than grandfathers. grandmother-grandfather, boy-girl, 
+sorority-fraternity, girlhood-boyhood, sister-brother, niece-nephew, daughter-son etc are equalization pairs.
+ 
+how do you decide what word to neutralize? So for example, the word doctor seems like a word you should neutralize to make it non-gender-specific or 
+non-ethnicity-specific.what the authors did is train a classifier to try to figure out what words are definitional, what words should be gender-specific and 
+what words should not be. And it turns out that most words in the English language are not definitional, meaning that gender is not part of the definition. And 
+it's such a relatively small subset of words like this, grandmother-grandfather, girl-boy, sorority-fraternity, and so on that should not be neutralized.
+And so a linear classifier can tell you what words to pass through the neutralization step to project out this bias direction, to project it on to this 
+essentially 299-dimensional subspace. And then, finally, the number of pairs you want to equalize, that's actually also relatively small, and is, at least for 
+the gender example, it is quite feasible to hand-pick most of the pairs you want to equalize.
+
+###################################################### week 3 ###################################
+
+------------------------------------------------------------  Various Sequence to sequence architectures
+@@@@@@@@@@@@@@@@@@@@@@@ Various models
+
+First, let's have a network, which we're going to call the encoder network be built as a RNN/ LSTM/ GRU,feed in the input French words one word at a time. And 
+after ingesting the input sequence, the RNN then offers a vector that represents the input sentence. After that, you can build a decoder network which I'm going 
+to draw here, which takes as input the encoding output by the encoder network shown in black on the left, and then can be trained to output the translation one 
+word at a time until eventually it outputs say, the end of sequence or end the sentence token upon which the decoder stops and as usual we could take the 
+generated tokens and feed them to the next [inaudible] in the sequence like we 're doing before when synthesizing text using the language model. 
+
+@@@@@@@@@@@@@@@@@@@@@@@ Picking the most likely sentence
+In language modeling, this was the network we had built in the first week. And this model allows you to estimate the probability of a sentence. That's what a 
+language model does. And you can also use this to generate novel sentences. The machine translation model looks as follows, the encoded network in green and 
+the decoded network in purple. The decoded network looks pretty much identical to the language model. 
+you're trying to estimate the probability of an English translation. Like, what's the chance that the translation is "Jane is visiting Africa in September" 
+but conditions on the input French censors like, "Jane visite I'Afrique en septembre".
+
+If you sample words from this distribution, p of y given x, maybe one time you get a pretty good translation, "Jane is visiting Africa in September." But, 
+maybe another time you get a different translation, Which sounds a little awkward but is not a terrible translation, just not the best one.  So, when you're 
+using this model for machine translation, you're not trying to sample at random from this distribution. Instead, what you would like is to find the English 
+sentence, y, that maximizes that conditional probability.
+
+So, when you're using this model for machine translation, you're not trying to sample at random from this distribution. Instead, what you would like is to 
+find the English sentence, y, that maximizes that conditional probability. The most common algorithm for doing this is called beam search.
+
+@@@@@@@@@@@@@@@@@@@@@@ Beam search 
+The first thing Beam search has to do is try to pick the first words of the English translation, that's going to operate. So, what's the probability of the 
+first output y, given the input sentence x gives the French input. Greedy search will pick only the one most likely words and move on, Beam Search instead can 
+consider multiple alternatives. B=3 (beam width) it will consider most likely possible choices for the first word.
+
+Having picked in, Jane and September as the three most likely choice of the first word, what Beam search will do now, is for each of these three choices consider 
+what should be the second word. Suppose 10000 words in vocabulary, you'd end up considering three times 10000 or thirty thousand possibilities because there 
+are 10,000 here, 10,000 here, 10,000 here as the beam width times the number of words in the vocabulary and what you do is you evaluate all of these 30000 
+options according to the probably the first and second words and then pick the top three.
+
+so let's say that 30,000 choices, the most likely were in-September and say Jane-is, and Jane-visits are the most likely three out of the 30,000 choices then 
+that's what Beam's search would memorize away and take on to the next step being surge. So notice one thing if beam search decides that the most likely choices 
+are the first and second words are in-September, or Jane-is, or Jane-visits. Then what that means is that it is now rejecting September as a candidate for the 
+first words of the output English translation so we're now down to two possibilities for the first words but we still have a beam width of three keeping track 
+of three choices for pairs of Y1, Y2 before going onto the third step of beam search.  Just want to notice that because of beam width is equal to three, every 
+step you instantiate three copies of the network to evaluate these partial sentence fragments and the output. And it's because of beam width is equal to three 
+that you have three copies of the network with different choices for the first words, but these three copies of the network can be very efficiently used to 
+evaluate all 30,000 options for the second word. 
+
+@@@@@@@@@@@@@@@@@@@@@@ Refinements to beam search
+Length normalization is a small change to the beam search algorithm that can help you get much better results. Multiplying a lot of numbers less than 1 will 
+result in a tiny, tiny, tiny number, which can result in numerical underflow. Meaning that it's too small for the floating part representation in your computer 
+to store accurately. So in practice, instead of maximizing this product, we will take logs. So by taking logs, you end up with a more numerically stable 
+algorithm that is less prone to rounding errors, numerical rounding errors, or to really numerical underflow.
+
+If you have a very long sentence, the probability of that sentence is going to be low, because you're multiplying as many terms here. Lots of numbers are less 
+than 1 to estimate the probability of that sentence. And so if you multiply all the numbers that are less than 1 together, you just tend to end up with a 
+smaller probability. And so this objective function has an undesirable effect, that maybe it unnaturally tends to prefer very short translations. It tends to 
+prefer very short outputs.
+
+how do you choose the beam width B? The larger B is, the more possibilities you're considering, and does the better the sentence you probably find. But the 
+larger B is, the more computationally expensive your algorithm is, because you're also keeping a lot more possibilities around. 
+
+@@@@@@@@@@@@@@@@@@@@@ Error analysis in beam search
+How error analysis interacts with beam search and how you can figure out whether it is the beam search algorithm that's causing problems and worth spending 
+time on. Or whether it might be your RNN model that is causing problems and worth spending time on.
+
+It's always tempting to increase the beam width that never hurts or pretty much never hurts. But just as getting more training data by itself might not get 
+you to the level of performance you want. In the same way, increasing the beam width by itself might not get you to where you want to go.
+ 
+@@@@@@@@@@@@@@@@@@@ Bleu score (Bilingual evaluation)
+One of the challenges of machine translation is that, given a French sentence, there could be multiple English translations that are equally good translations 
+of that French sentence. So how do you evaluate a machine translation system if there are multiple equally good answers, unlike, say, image recognition where 
+there's one right answer? You just measure accuracy. If there are multiple great answers, how do you measure accuracy? The way this is done conventionally is 
+through something called the BLEU score. 
+
+What the BLEU score does is given a machine generated translation, it allows you to automatically compute a score that measures how good is that machine 
+translation. And the intuition is so long as the machine generated translation is pretty close to any of the references provided by humans, then it will get a 
+high BLEU score. So, the intuition behind the BLEU score is we're going to look at the machine generated output and see if the types of words it generates appear 
+in at least one of the human generated references.
+
+BLEU score is a useful single real number evaluation metric to use whenever you want your algorithm to generate a piece of text. And you want to see whether it 
+has similar meaning as a reference piece of text generated by humans. This is not used for speech recognition, because in speech recognition, there's usually 
+one ground truth. And you just use other measures to see if you got the speech transcription on pretty much, exactly word for word correct. 
+
+@@@@@@@@@@@@@@@@ Attention model
+Encoder-Decoder architecture for machine translation. Where one RNN reads in a sentence and then different one outputs a sentence. There's a modification to 
+this called the Attention Model, that makes all this work much better. Read in the whole sentence and then memorize the whole sentences and store it in the 
+activations conveyed here, Then for the purple network, the decoder network till then generate the English translation. Instead, what the human translator would 
+do is read the first part of it, maybe generate part of the translation. Look at the second part, generate a few more words, look at a few more words, generate 
+a few more words and so on.
+
+What the Attention Model would be computing is a set of attention weights and we're going to use Alha(1,1) to denote when you're generating the first words, 
+how much should you be paying attention to this first piece of information here. And then we'll also come up with a second that's called Attention Weight,
+Alpha(1,2) which tells us what we're trying to compute the first work of Jane, how much attention we're paying to this second work from the inputs and so on 
+and the Alpha(1,3) and so on. and together this will tell us what is exactly the context from denoter C that we should be paying attention to, and that is input
+to this RNN unit to then try to generate the first words. 
+
+Alpha(T, T Prime)that tells it, when you're trying to generate the T, English word, how much should you be paying attention to the T prime French words. And 
+this allows it on every time step to look only maybe within a local window of the French sentence to pay attention to, when generating a specific English word.
+
+@@@@@@@@@@@@@@@@@@ Attention model
+Attention parameters so alpha_11, alpha_12 and so on tells us how much attention. And so these alpha parameters tells us how much the context would depend on 
+the features we're getting or the activations we're getting from the different time steps.And so the way we define the context is actually be a way to some of 
+the features from the different time steps waited by these attention waits. So more formally the attention waits will satisfy this that they are all be 
+non-negative, so it will be a zero positive and they'll sum to one. 
+
+Now how do we compute these factors e. Well, one way to do so is to use a small neural network as follows. 
+
+Now, one downside to this algorithm is that it does take quadratic time or quadratic cost to run this algorithm. If you have tx words in the input and ty words 
+in the output then the total number of these attention parameters are going to be tx times ty. And so this algorithm runs in quadratic cost. Although in machine 
+translation applications where neither input nor output sentences is usually that long maybe quadratic cost is actually acceptable. Although, there is some 
+research work on trying to reduce costs as well.
+
+Machine translation is a very complicated problem in the prior exercise you get to implement and play of the attention while you yourself for the date 
+normalization problem. So the problem inputting a date like this.
+
+------------------------------------------------------------  Speech recognition- Audio data
+@@@@@@@@@@@@@@@@@@@@@@@ Speech recognition
+once upon a time, speech recognition systems used to be built using phonemes and this where, I want to say hand-engineered basic units of cells. They try to 
+break language down to these basic units of sound.
+
+The CTC cost function allows the RNN to generate an output like this ttt, there's a special character called the blank character, which we're going to write as 
+an underscore here, h_eee___. 
+
+How speech recognition models work. Attention like models work and CTC models work and present two different options of how to go about building these systems. 
+But, what I like to do in the next video is share you, how you can build a trigger word detection system, where keyword detection system which is actually much 
+easier and can be done with even a smaller or more reasonable amount of data. 
+
+@@@@@@@@@@@@@@@@@@@@@@@@ Trigger word detection
+I'm just going to show you one example of an algorithm you can use. Now, you've seen RNNs like this, and what we really do, is to take an audio clip, maybe 
+compute spectrogram features, and that generates audio features X-1 X-2 X-3.
+ 
+So, this point in the audio clip, is when someone just finished saying the trigger word, such as Alexa or Xiadunihao, or Hey Siri, or okay Google. 
+Then, in the training set, you can set the target labels to be zero for everything before that point, and right after that, to set the target label of 1. 
+One slight disadvantage of this is, it creates a very imbalanced training set, so we have a lot more zeros than we want. So, one other thing you could do, that 
+it's little bit of a hack, but could make the model a little bit easier to train, is instead of setting only a single time step to operate one, you could 
+actually make it to operate a few ones for several times. So, for a fixed period of time, before reverting back to zero. So that slightly evens out the ratio 
+of one's to zero's, but there's this little bit of a hack. But, if this is when in the audio clip, the trigger word was said, then right after that, you can 
+set the target label to one, and if this is the trigger word said again, then right after that, is when you want the RNN to output one. 
