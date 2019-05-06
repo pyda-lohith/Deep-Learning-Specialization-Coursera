@@ -1,0 +1,513 @@
+#################################################################### Week1 ####################################################
+
+--------------------------------------------------------- Convolutional Neural network
+$$$$$$$$$$$$$$$$ Vertical edge detection
+Why is this doing vertical edge detection? 
+Here left half gives brighter intensity values and the right half gives you darker pixel intensive values. We are convolving with 3*3 filter can be visualized as 
+follows, where is lighter, brighter pixels on the left and then this mid tone zeroes in the middle and then darker on the right. 
+
+If you plot this right most matrix's image it will look like that where there is this lighter region right in the middle and that corresponds to this having 
+detected this vertical edge down the middle of your 6*6 image. In case the dimensions here seem a little bit wrong that the detected edge seems really thick, 
+that's only because we are working with very small images in this example.
+
+one intuition to take away from vertical edge detection is that a vertical edge is a 3*3 region since we are using a 3 by 3 filter where there are bright pixels 
+on the left, you do not care that much what is in the middle and dark pixels on the right. The middle in this 6 by 6 image is really where there could be bright 
+pixels on the left and darker pixels on the right and that is why it thinks its a vertical edge over there. 
+
+$$$$$$$$$$$$$$$$ More edge detection 
+The negative 30s shows that this is a dark to light rather than a light to dark transition. And if you don't care which of these two cases it is, you could take 
+absolute values of this output matrix. But this particular filter does make a difference between the light to dark versus the dark to light edges.
+In vertical detector- Vertical edge filter, is a 3*3 region where the pixels are relatively bright on the left part and relatively dark on the right part. i.e 
+1 means brght -1 means dark. 
+
+Historically, in the computer vision literature, there was a fair amount of debate about what is the best set of numbers to use. So here's something else you could 
+use, which is maybe 1, 2, 1, 0, 0, 0, -1, -2, -1. This is called a Sobel filter. The advantage of this is it puts a little bit more weight to the central row, the 
+central pixel, and this makes it maybe a little bit more robust. 
+
+you don't need to have computer vision researchers handpick these 9 numbers. Maybe you can just learn them and treat the 9 numbers of this matrix as parameters, 
+which you can then learn using back propagation. And the goal is to learn 9 parameters so that when you take the 6*6 image, and convolve it with your 3*3 filter, 
+that this gives you a good edge detector.
+
+Rather than just vertical and horizontal edges, maybe it can learn to detect edges that are at 45 degrees or 70 degrees or 73 degrees or at whatever orientation 
+it chooses.we find that neural networks can actually learn low level features, can learn features such as edges, even more robustly than computer vision 
+researchers are generally able to code up these things by hand. 
+
+$$$$$$$$$$$$$$$$$$$ Padding
+There are 2 donwsides of convolving
+1.If every time you apply a convolutional operator, your image shrinks, so you come from 6*6 down to 4*4 then, you can only do this a few times before your image
+starts getting really small, maybe it shrinks down to 1*1 or something, so maybe, you don't want your image to shrink every time you detect edges or to set other
+features on it, so that's one downside.
+2.If you look the pixel at the corner or the edge, this little pixel is touched as used only in one of the outputs, because this touches that 3*3 region. 
+Whereas, if you take a pixel in the middle, say this pixel, then there are a lot of 3*3 regions that overlap that pixel and so, is as if pixels on the corners 
+or on the edges are use much less in the output.So you're throwing away a lot of the information near the edge of the image.
+
+By padding, you managed to preserve the original input size of 6*6. P is padding amount, we acn add padding =2 with even more pixels if you choose. 
+Always floor value will take because convention that your 3*3 filter, must lie entirely within your image or the image plus the padding region before there's
+as a corresponding output generated that's convention.
+
+Now, before moving on there is a technical comment I want to make about cross-correlation versus convolutions and just for the facts what you have to do to 
+implement CNN. If you reading different math textbook or signal processing textbook, there is one other possible inconsistency in the notation which is that, 
+if you look at the typical math textbook, the way that the convolution is defined before doing the element Y's product and summing, there's actually one other 
+step that you'll first take which is to convolve this 6*6 matrix with this 3*3 filter. You at first take the three by three filter and slip it on the 
+horizontal as well as the vertical axis. Well, this is really taking the three by three filter and narrowing it both on the vertical and horizontal axes. 
+And then it was this flit matrix that you would then copy over here. 
+
+$$$$$$$$$$$$$$$$$$$$ Convolution over volumes
+Filter itself will also have three layers corresponding to the red, green, and blue channels. To simplify the drawing of this three by three by three filter, 
+instead of joining it is a stack of the matrices, I'm also going to, sometimes, just draw it as this three dimensional cube, like that.  So, if you want to 
+detect edges in the red channel of the image, then you could have the first filter. 
+
+what if we don't just wanted to detect vertical edges? What if we wanted to detect vertical edges and horizontal edges and maybe 45 degree edges and 
+maybe 70 degree edges as well, but in other words, what if you want to use multiple filters at the same time? what we can do is then take these two 4*4 outputs, 
+take this first one within the front and you can take this second filter output and well, let me draw it here, put it at back as follows, so that by stacking 
+these two together, you end up with a 4*4 by two output volume. 
+
+$$$$$$$$$$$$$$$$$$$$ Onel ayer of CNN
+The final thing to turn this into a convolutional neural net layer, is that for each of these we're going to add it bias, so this is going to be a real number. 
+And where python broadcasting, you kind of have to add the same number so every one of these 16 elements. This 4*4*2 is one layer of a convolutional neural 
+network. a[0] is image, w[1] is filter.
+
+No matter how big the input image is, the input image could be 1000*1000 or 5000*5000, but the number of parameters you have still remains fixed as 280. And you 
+can use these ten filters to detect features, vertical edges, horizontal edges maybe other features anywhere even in a very, very large image is just a very 
+small number of parameters. So these is really one property of CNN that makes less prone to overfitting. 
+
+Now, I'm going to modify this notation a little bit. I'm going to us superscript l- 1, because that's the activation from the previous layer, l- 1 times nc 
+of l- 1. And in the example so far, we've been just using images of the same height and width. That in case the height and width might differ, l am going to use 
+superscript h and superscript w, to denote the height and width of the input of the previous layer.
+
+when you are using a vectorized implementation or batch gradient descent or mini batch gradient descent, then you actually outputs Al, which is a set of m 
+activations, if you have m examples. So that would be M*nHl*nwl*ncl right.
+
+Bias will have this many variables, it's just a vector of this dimension. Although later on we'll see that the code will be more convenient represented as 
+1*1*1*nc[l] four dimensional matrix, or four dimensional tensor.
+
+$$$$$$$$$$$$$$$$$$$$$$$  Pooling layers
+Other than convolutional layers, ConvNets often also use pooling layers to reduce the size of the representation, to speed the computation, as well as make 
+some of the features that detects a bit more robust.
+
+So what the max operation does is a lots of features detected anywhere, and one of these quadrants , it then remains preserved in the output of max pooling. 
+So, what the max operates to does is really to say, if these features detected anywhere in this filter, then keep a high number. But if this feature is not 
+detected, so maybe this feature doesn't exist in the upper right-hand quadrant. Then the max of all those numbers is still itself quite small.
+
+The max pooling computation is done independently on each of these n_c channels. So, that's max pooling. This one is the type of pooling that isn't used 
+very often, but I'll mention briefly which is average pooling. max pooling is used much more often than average pooling with one exception, which is sometimes 
+very deep in a neural network. You might use average pooling to collapse your representation from say 7*7*1000. An average over all the spatial extents , you 
+get 1*1*1000. 
+
+One thing to about pooling is that there are no parameters to learn. So, when we implement that backprop,you find that there are no parameters that 
+backpropagation will adapt through max pooling. Instead, there are just these hyperparameters that you set once, maybe set ones by hand or set using 
+cross-validation. And then beyond that, you are done. Its just a fixed function that the neural network computes in one of the layers, and there is actually 
+nothing to learn. It's just a fixed function.
+
+$$$$$$$$$$$$$$$$$$$$$$ CNN example
+you have a number like 7 in a 32 x 32 RGB initiate trying to recognize which one of the 10 digits from 0 to 9 is this. what I'm going to use in this slide is 
+inspired, it's actually quite similar to one of the classic neural networks called LeNet-5, which is created by Yann LeCun many years ago.
+Conv1 + pool1 = Layer1. Pool1 is grouped into Layer1 because it doesn't have its own weights. 
+
+what we're going to do is then take these 400 units and let's build the next layer, As having 120 units. So this is actually our first fully connected layer. 
+I'm going to call this FC3 because we have 400 units densely connected to 120 units.
+
+So as you go deeper usually the height and width will decrease, whereas the nc will increase. It's gone from 3 to 6 to 16, and then your fully connected layer 
+at the end.
+
+1. First, notice that the max pooling layers don't have any parameters. 
+2. Second, notice that the conv layers tend to have relatively few parameters, as we discussed in early videos. And in fact, a lot of the parameters tend to 
+be in the fully collected layers of the neural network.
+you notice also that the activation size tends to maybe go down gradually as you go deeper in the neural network. If it drops too quickly, that's usually not 
+great for performance as well.
+
+$$$$$$$$$$$$$$$$$$$$ Why convolutions
+Advantages are parameter sharing and sparsity of connections.
+
+This output(marked in red) depends only on these nine input features. And so, it's as if only those nine input features are connected to this output, and the 
+other pixels just don't affect this output at all. And so, through these 2 mechanisms, a neural network has a lot fewer parameters which allows it to be 
+trained with smaller training cells and is less prone to be overfitting. 
+
+#################################################################### Week2 ####################################################
+
+----------------------------------------------------- Case studies
+$$$$$$$$$$$$$$$ classic networks
+I guess but isn't really done right now is that the original LeNet-5 had a non-linearity after pooling, and I think it actually uses sigmoid non-linearity after 
+the pooling layer. 
+
+Alexnet neural network actually had a lot of similarities to LeNet, but it was much bigger. So whereas the LeNet-5 from previous slide had about 60,000 
+parameters, this AlexNet that had about 60 million parameters. And the fact that they could take pretty similar basic building blocks that have a lot more 
+hidden units and training on a lot more data, they trained on the image that dataset that allowed it to have a just remarkable performance.  Another aspect of 
+this architecture that made it much better than LeNet was using the value activation function. 
+
+when this Alexnet paper was written, GPUs was still a little bit slower, so it had a complicated way of training on two GPUs. And the basic idea was that, a lot 
+of these layers was actually split across two different GPUs and there was a thoughtful way for when the two GPUs would communicate with each other. And the 
+paper also, the original AlexNet architecture also had another set of a layer called a Local Response Normalization. 
+
+16 in the VGG-16 refers to the fact that this has 16 layers that have weights. And this is a pretty large network, this network has a total of about 138 million 
+parameters. And that's pretty large even by modern standards. You can tell his architecture is really quite uniform. There is a few conv-layers followed by a 
+pooling layer, which reduces the height and width, right? So the pooling layers reduce the height and width. You have a few of them 
+
+$$$$$$$$$$$$$$$$$$$$ Resnets
+Very, very deep neural networks are difficult to train because of vanishing and exploding gradient types of problems. In this video, you'll learn about 
+skip connections which allows you to take the activation from one layer and suddenly feed it to another layer even much deeper in the neural network. And using 
+that, you'll build ResNet which enables you to train very, very deep networks.Sometimes even networks of over 100 layers.
+
+ResNets are built out of something called a residual block. For information from a[l] to flow to a[l+2], it needs to go through all of these steps which I'm 
+going to call the "main path' of this set of layers. In a residual net, we're going to make a change to this. We're going to take a[l], and just first forward 
+it, copy it, match further into the neural network to here, and just at a[l], before applying to non-linearity, the ReLU non-linearity. And I'm going to call 
+this the shortcut. So rather than needing to follow the main path, the information from a[l] can now follow a shortcut to go much deeper into the neural network.
+
+To turn this plain network into a ResNet, what you do is you add all those skip connections although those short like a connections like so. So every two layers 
+ends up with that additional change that we saw on the previous slide to turn each of these into residual block. So this picture shows five residual blocks 
+stacked together, and this is a residual network. 
+
+$$$$$$$$$$$$$$$$$$$$$$$ Why resnet works
+What this shows is that the identity function is easy for residual block to learn. And it's easy to get a[l+2] equals to a[l] because of this skip connection. 
+And what that means is that adding these two layers in your neural network, it doesn't really hurt your neural network's ability to do as well as this simpler 
+network without these two extra layers, because it's quite easy for it to learn the identity function to just copy a[l] to a[l+2] using despite the addition of 
+these two layers. And this is why adding two extra layers, adding this residual block to somewhere in the middle or the end of this big neural network it doesn't
+hurt performance. 
+
+we're assuming that z[l+2] and a[l] have the same dimension. And so what you see in ResNet is a lot of use of same convolutions so that the dimension of this is 
+equal to the dimension I guess of this layer or the outputs layer. 
+
+$$$$$$$$$$$$$$$$$$$$$$ Networks in network
+one of the ideas that really helps is using a 1*1 convolution. so, a convolution by a one by one filter, doesn't seem particularly useful. You just multiply it 
+by some number. But that's the case of six by six by one channel images. If you have a 6 by 6 by 32 instead of by 1, then a convolution with a 1 by 1 filter can 
+do something that makes much more sense. It will take the element wise product between 32 numbers on the left and 32 numbers in the filter. And then apply a 
+ReLU non-linearity to it after that. So, to look at one of the 36 positions, maybe one slice through this value, you take these 36 numbers multiply it by 1*1 
+slice through the volume like that, and you end up with a single real number which then gets plotted in one of the outputs like that. And in fact, one way to 
+think about the 32 numbers you have in this 1*1*32 filters is that, it's as if you have neuron that is taking as input, 32 numbers multiplying each of these 32 
+numbers in one slice of the same position heightened with by these 32 different channels, multiplying them by 32 weights and then applying a ReLU non-linearity 
+to it and then outputting the corresponding thing over there.
+
+Let's say you have a 28 by 28 by 192 volume. If you want to shrink the height and width, you can use a pulling layer. So we know how to do that. But one of a 
+number of channels has gotten too big and we want to shrink that. How do you shrink it to a 28*28*32 dimensional volume?  Well, what you can do is use 
+32 filters that are 1*1. And technically, each filter would be of dimension 1*1*192, because the number of channels in your filter has to match the 
+number of channels in your input volume, but you use 32 filters and the output of this process will be a 28*28*32 volume.
+
+Pooling --> shrink nH and nW
+1*1 ---> shirnk nC i.e no of channels
+
+What if we keep no of channels = 192 then output would be 28*28*192 and it just adds non-linearity. It allows you to learn the more complex function of your 
+network by adding another layer that inputs 28*28*192 and outputs 28*28*192. So, that's how a one by one convolutional layer is actually doing something pretty 
+non-trivial and adds non-linearity to your neural network and allow you to decrease or keep the same or if you want, increase the number of channels in your 
+volumes. 
+
+$$$$$$$$$$$$$$$$$$$ Inception network Motivation
+When designing a layer for a ConvNet, you might have to pick, do you want a 1 by 3 filter, or 3 by 3, or 5 by 5, or do you want a pooling layer? What the 
+inception network does is it says, why should you do them all? And this makes the network architecture more complicated, but it also works remarkably well.
+
+28*28*192 dimensional volume. So what the inception network or what an inception layer says is, instead choosing what filter size you want in a Conv layer, or 
+even do you want a convolutional layer or a pooling layer? Let's do them all. So what if you can use a 1*1 convolution, and that will output a 28*28*something. 
+Let's say 28*28*64 output, and you just have a volume there. But maybe you also want to try a 3*3 and that might output a 20*20*128. And then what you do is 
+just stack up this second volume next to the first volume. And to make the dimensions match up, let's make this a same convolution. So the output dimension is 
+still 28*28, same as the input dimension in terms of height and width.  Now in order to make all the dimensions match, you actually need to use padding for 
+max pooling. So this is an unusual formal pooling because if you want the input to have a higher than 28*28 and have the output, you'll match the dimension 
+everything else also by 28*28, then you need to use the same padding as well as a s=1 for pooling.
+
+But with a inception module like this, you can input some volume and output. In this case I guess if you add up all these numbers, 32+32+128+64= 256. 
+So you will have one inception module input 28*28*129, and output 28*28*256. And this is the heart of the inception network which is due to Christian Szegedy.
+Now it turns out that there is a problem with the inception layer as we've described it here, which is computational cost. On the next slide, see 5*5 filetr.
+
+So the total number of multiplies you need is the number of multiplies you need to compute each of the output values times the number of output values you need 
+to compute. And if you multiply all of these numbers, this is equal to 120 million. 120 million multiplies on the modern computer, this is still a pretty 
+expensive operation.  On the next slide you see how using the idea of 1*1 convolutions, which you learnt about in the previous video, you'll be able to reduce 
+the computational costs by about a factor of 10.
+
+But what we've done is we're taking this huge volume we had on the left, and we shrunk it to this much smaller intermediate volume, which only has 16 instead 
+of 192 channels. Sometimes this is called a bottleneck layer. 
+
+$$$$$$$$$$$$$$$$$$$ Inception network
+So this is one inception module, and what the inception network does, is, more or less, put a lot of these modules together.
+So what do they do? Well, the last few layers of the network is a fully connected layer followed by a softmax layer to try to make a prediction. What these 
+side branches do is it takes some hidden layer and it tries to use that to make a prediction. So this is actually a softmax output and so is that. And this 
+other side branch, again it is a hidden layer passes through a few layers like a few connected layers. And then has the softmax try to predict what's the 
+output label. And you should think of this as maybe just another detail of the inception that's worked. But what is does is it helps to ensure that the features 
+computed. Even in the heading units, even at intermediate layers. That they're not too bad for protecting the output cause of a image. And this appears to h
+ave a regularizing effect on the inception network and helps prevent this network from overfitting. This particular Inception network was developed by authors 
+at Google. Who called it GoogleNet, spelled like that, to pay homage to the network. 
+
+----------------------------------------------------- Practical advices using Convnets
+$$$$$$$$$$$$$$$ Transfer Learning
+If you're building a computer vision application rather than training the ways from scratch, from random initialization, you often make much faster progress if 
+you download ways that someone else has already trained on the network architecture and use that as pre-training and transfer that to a new task that you might 
+be interested in.
+
+you probably don't have a lot of pictures of Tigger or Misty so your training set will be small. What can you do? I recommend you go online and download some 
+open source implementation of a neural network and download not just the code but also the weights. There are a lot of networks you can download that have been 
+trained on for example, ImageNet data sets which has a thousand different clauses so the network might have a softmax unit that outputs one of a thousand 
+possible classes.What you can do is then get rid of the softmax layer and create your own softmax unit that outputs Tigger or Misty or neither. By using someone 
+else's free trade ways, you might probably get pretty good performance on this even with a small data set. 
+
+Fortunately, a lot of people learning frameworks support this mode of operation and in fact, depending on the framework it might have things like trainable
+parameter=0, you might set that for some of these early layers. In others they just say, don't train those ways or sometimes you have a parameter like freeze=1
+and these are different ways and different deep learning program frameworks that let you specify whether or not to train the ways associated with particular 
+layer. In this case, you will train only the softmax layers ways but freeze all of the earlier layers ways. 
+
+One of the trick that could speed up training is we just pre-compute that layer, the features of re-activations from that layer and just save them to disk. 
+What you're doing is using this fixed function, in this first part of the neural network, to take this input any image X and compute some feature vector for it 
+and then you're training a shallow softmax model from this feature vector to make a prediction. One step that could help your computation as you just 
+pre-compute that layers activation,for all the examples in training sets and save them to disk and then just train the softmax clause right on top of that. 
+
+Whether you have a larger training set. One rule of thumb is if you have a larger label data set so maybe you just have a ton of pictures of Tigger, Misty as 
+well as I guess pictures neither of them, one thing you could do is then freeze fewer layers. Maybe You could take the last few layers ways and just use that 
+as initialization and do gradient descent from there or you can also blow away these last few layers and just use your own new hidden units and in your own 
+final softmax outputs. Either of these matters could be worth trying.
+
+Finally, if you have a lot of data, one thing you might do is take this open source network and ways and use the whole thing just as initialization and train 
+the whole network. Although again if this was a thousand of softmax and you have just three outputs, you need your own softmax output. The output of labels you 
+care about. But the more label data you have for your task or the more pictures you have of Tigger, Misty and neither, the more layers you could train and in 
+the extreme case, you could use the ways you download just as initialization so they would replace random initialization and then could do gradient descent, 
+training updating all the ways and all the layers of the network. 
+
+$$$$$$$$$$$$$$$$$$$ Data Augmentation
+Most computer vision task could use more data. And so data augmentation is one of the techniques that is often used to improve the performance of computer 
+vision systems. data augmentation  menthods in computer vision.
+1. Mirroring: simplest data augmentation method is mirroring on the vertical axis, where if you have this example in your training set, you flip it 
+				horizontally to get that image on the right.
+2. Random cropping: So random cropping isn't a perfect data augmentation. What if you randomly end up taking that crop which will look much like a cat 
+					but in practice and worthwhile so long as your random crops are reasonably large subsets of the actual image. 
+
+Just a comment for the advanced learners in this course, that is okay if you don't understand what I'm about to say when using red. There are different ways to 
+sample R, G, and B. One of the ways to implement color distortion uses an algorithm called PCA. This is called Principles Component Analysis, which I talked 
+about in the ml-class.org Machine Learning Course on Coursera.But the details of this are actually given in the AlexNet paper, and sometimes called PCA 
+Color Augmentation. 
+But the rough idea at the time PCA Color Augmentation is for example, if your image is mainly purple, if it mainly has red and blue tints, and very little 
+green,then PCA Color Augmentation, will add and subtract a lot to red and blue, where it balance [inaudible] all the greens, so kind of keeps the overall 
+color of the tint the same.
+
+$$$$$$$$$$$$$$$$$$$$$ State of computer vision
+Even though data sets are getting bigger and bigger, often we just don't have as much data as we need. And this is why this data computer vision historically 
+and even today has relied more on hand-engineering. And I think this is also why that either computer vision has developed rather complex network architectures, 
+is because in the absence of more data the way to get good performance is to spend more time architecting, or fooling around with the network architecture.
+
+#################################################################### Week3 ####################################################
+
+----------------------------------------------------- Detection algorithms
+$$$$$$$$$$$$$$$$$$$$$$ Object localization
+These are your classes, they have a softmax with 4 possible outputs. So this is the standard classification pipeline. How about if you want to localize the car 
+in the image as well. To do that, you can change your neural network to have a few more output units that output a bounding box. So, in particular, you can have 
+the neural network output 4 more numbers, and I'm going to call them bx, by, bh, and bw. And these four numbers parameterized the bounding box of the detected 
+object.
+
+The red rectangle requires specifying the midpoint. So that’s the point bx, by as well as the height, that would be bh, as well as the width, bw of this 
+bounding box. So now if your training set contains not just the object cross label, which a neural network is trying to predict up here, but it also contains 
+four additional numbers. Giving the bounding box then you can use supervised learning to make your algorithm outputs not just a class label but also the four 
+parameters to tell you where is the bounding box of the object you detected.
+
+Let's define the target label y as follows. Is going to be a vector where the first component pc is going to be, is there an object? if the object is, 
+classes 1, 2 or 3, pc will be equal to 1. if it's none of the objects you're trying to detect, then pc will be 0. if pc is equal to 1, you wanted to also 
+output c1, c2 and c3 which tells us is it the class 1, class 2 or class 3. So is it a pedestrian, a car or a motorcycle.
+
+Notice that y here has 8 components. so sum of squared error goes from 1 to 8.
+In practice you could probably use a log like feature loss for the c1, c2, c3 to the softmax output. squared error for the bounding box coordinates and 
+if a pc you could use something like the logistics regression loss.
+
+$$$$$$$$$$$$$$$$$$$$$$$ landmark detection
+you want the algorithm to tell you where is the corner of someone's eye.  so you can just have a neural network have its final layer and have it just output 
+two more numbers which I'm going to call our lx and ly to just tell you the coordinates of that corner of the person's eye.
+
+$$$$$$$$$$$$$$$$$$$$ Object detection
+object detection using something called the Sliding Windows Detection Algorithm. Once you've trained up this cofinite, you can then use it in 
+Sliding Windows Detection.  So the way you do that is, if you have a test image like this what you do is you start by picking a certain window size, shown down 
+there. And then you would input into this convnet a small rectangular region. it'll say, no that little red square does not contain a car. So this algorithm is 
+called Sliding Windows Detection because you take these windows, these square boxes, and slide them across the entire image and classify every square region 
+with some stride as containing a car or not. 
+
+Now there's a huge disadvantage of Sliding Windows Detection, which is the computational cost. Because you're cropping out so many different square regions in 
+the image and running each of them independently through a convnet. And if you use a very coarse stride, a very big stride, a very big step size, then that will 
+reduce the number of windows you need to pass through the convnet, but that courser granularity may hurt performance.Whereas if you use a very fine granularity 
+or a very small stride, then the huge number of all these little regions you're passing through the cofinite means that means there is a very high 
+computational cost. 
+
+So, before the rise of Neural Networks people used to use much simpler classifiers like a simple linear classifier over hand engineer features in order to 
+perform object detection. And in that era because each classifier was relatively cheap to compute, it was just a linear function, Sliding Windows Detection 
+ran okay. 
+
+$$$$$$$$$$$$$$$$$$$$$$$$ Convolutional Implementation of Sliding Windows
+So let's say that your convnet inputs 14*14*3 images and your tested image is 16*16*3. So now added that yellow stripe to the border of this image. In the 
+original sliding windows algorithm, you might want to input the blue region into a convnet and run that once to generate a classification 0 or 1 and then 
+slightly down a bit,uses a stride of two pixels and then you might slide that to the right by two pixels to input this green rectangle into the convnet and we 
+run the whole convnet and get another label, 01. Then you might input this orange region into the convnet and run it one more time to get another label.
+
+To run sliding windows on this 16*16*3 image is pretty small image. You run this convnet four times in order to get four labels. But it turns out a lot of this 
+computation done by these four convnets is highly duplicative. So what the convolutional implementation of sliding windows does is it allows these forward passes 
+in the convnet to share a lot of computation. 
+
+So what this process does, what this convolution implementation does is, instead of forcing you to run four propagation on four subsets of the input image 
+independently, Instead, it combines all four into one form of computation and shares a lot of the computation in the regions of image that are common. So all 
+four of the 14 by 14 patches we saw here.
+
+$$$$$$$$$$$$$$$$$$$$$$$$ Bounding Box Predictions
+convolutional implementation of sliding windows. That's more computationally efficient, but it still has a problem of not quite outputting the most accurate 
+bounding boxes. In this case, none of the boxes really match up perfectly with the position of the car. 
+
+A good way to get this output more accurate bounding boxes is with the YOLO algorithm. YOLO stands for, You Only Look Once. Here's what you do. Let's say you 
+have an input image at 100*100, you're going to place down a grid on this image. And for the purposes of illustration, I'm going to use a 3*3 grid. Actual 
+implementation, you use a finer one, like maybe a 19*19 grid. And the basic idea is you're going to take the image classification and localization algorithm 
+that you saw a few videos back, and apply it to each of the 9 grids. 
+
+Now, how about this grid cell? To give a bit more detail, this image has two objects. And what the YOLO algorithm does is it takes the midpoint of each of the 
+two objects and then assigns the object to the grid cell containing the midpoint. So the left car is assigned to this grid cell, and the car on the right, which 
+is this midpoint, is assigned to this grid cell. And so even though the central grid cell has some parts of both cars, we'll pretend the central grid cell has 
+no interesting object so that the central grid cell the class label Y also looks like this vector with no object.
+
+so what you do is you have an input X which is the input image like that, and you have these target labels Y which are 3 by 3 by 8, and you use back propagation 
+to train the neural network to map from any input X to this type of output volume Y. So the advantage of this algorithm is that the neural network outputs 
+precise bounding boxes as follows. So at test time, what you do is you feed an input image X and run forward prop until you get this output Y. And then for each 
+of the nine outputs of each of the 3 by 3 positions in which of the output, you can then just read off 1 or 0. Is there an object associated with that one of the 
+nine positions? And that there is an object, what object it is, and where is the bounding box for the object in that grid cell? And so long as you don't have 
+more than one object in each grid cell, this algorithm should work okay. Use of much finer grid cells like 19*19 reduces the chance that there are multiple 
+objects assigned to the same grid cell. So each object, even if the objects spends multiple grid cells, that object is assigned only to one of the nine grid 
+cells, or one of the 3 by 3, or one of the 19 by 19 grid cells. 
+
+Notice 2 things:
+1. This is a lot like the image classification and localization algorithm that we talked about in the first video of this week. And that it outputs the bounding 
+balls coordinates explicitly. And so this allows in your network to output bounding boxes of any aspect ratio, as well as, output much more precise coordinates 
+that aren't just dictated by the stripe size of your sliding windows classifier.
+2. This is a convolutional implementation and you're not implementing this algorithm nine times on the 3*3 grid or if you're using a 19*19 grid.19**2= 361. So, 
+you're not running the same algorithm 361 times. Instead, this is one single convolutional implementation, where you use one convnet with a lot of shared 
+computation between all the computations needed for all of your 3*3 or all of your 19*19 grid cells. 
+
+how do you encode these bounding boxes bx, by, bh, bw? 
+In the YOLO algorithm, relative to this square, when I take the convention that the upper left point here is (0,0) and this lower right point is (1,1).
+bh--> fraction of the overall width of this box.   
+So, in other words, this bx, by, BH, BW as specified relative to the grid cell. 
+
+Although, there are some more complicated parameterizations involving sigmoid functions to make sure this is between 0 and 1. And using an exponential 
+parameterization to make sure that these are non-negative.
+ 
+$$$$$$$$$$$$$$$$$$$$$ Intersection Over Union
+how do you tell if your object detection algorithm is working well? 
+"Intersection Over Union". we use both for evaluating your object detection algorithm, as well as in the next video, using it to add another component to your 
+object detection algorithm, to make it work even better. In the object detection task, you expected to localize the object as well. So if that's the ground-truth 
+bounding box(red), and if your algorithm outputs this bounding box(purple), is this a good outcome or a bad one? 
+
+The higher the IoUs, the more accurate the bounding the box.
+
+$$$$$$$$$$$$$$$$$$$$$$$ Non-max Suppression
+One of the problems of Object Detection as you've learned about this so far, is that your algorithm may find multiple detections of the same objects. Rather 
+than detecting an object just once, it might detect it multiple times. Non-max suppression is a way for you to make sure that your algorithm detects each object 
+only once.
+
+So, when you run your algorithm, you might end up with multiple detections of each object. So, what non-max suppression does, is it cleans up these detections. 
+So they end up with just one detection per car, rather than multiple detections per car. So concretely, what it does, is it first looks at the probabilities 
+associated with each of these detections i.e PC (propobilities of detection). But for now, let's just say is Pc with the probability of a detection. And it first 
+takes the largest one, which in this case is 0.9 and says, "That's my most confident detection, so let's highlight that and just say I found the car there.
+Having done that the non-max suppression part then looks at all of the remaining rectangles and all the ones with a high overlap, with a high IOU, with this 
+one that you've just output will get suppressed. So those two rectangles with the 0.6 and the 0.7. Both of those overlap a lot with the light blue rectangle. 
+So those, you are going to suppress and darken them to show that they are being suppressed. These are your two final predictions. So, this is non-max suppression.
+
+Let's go through the details of the algorithm. First, on this 19*19 grid, you're going to get a 19*19*8 output volume. Let me get rid of the C1, C2, C3. so
+output would be 19*19*5 i.e  for each of the 361 positions, you get an output prediction of the following. Which is the PC(chance there's an object), and then 
+the bounding box.
+
+I've described the algorithm using just a single object on this slide. If you actually tried to detect three objects say pedestrians, cars, and motorcycles, 
+then the output vector will have three additional components. And it turns out, the right thing to do is to independently carry out non-max suppression 3 times, 
+one on each of the outputs classes. 
+
+$$$$$$$$$$$$$$$$$$$$$$  Anchor Boxes
+One of the problems with object detection as you have seen it so far is that each of the grid cells can detect only one object. What if a grid cell wants to 
+detect multiple objects? 
+
+I have to pick one of the two detections to output. With the idea of anchor boxes, what you are going to do, is pre-define two different shapes called, 
+anchor boxes or anchor box shapes. And what you are going to do is now, be able to associate two predictions with the two anchor boxes. And in general, you 
+might use more anchor boxes, maybe five or even more. 
+
+Disadvantages:
+1. What if you have two anchor boxes but three objects in the same grid cell? That's one case that this algorithm doesn't handle well. Hopefully, it won't 
+happen. But if it does, this algorithm doesn't have a great way of handling it. I will just influence some default tiebreaker for that case.
+2. what if you have two objects associated with the same grid cell, but both of them have the same anchor box shape? Again, that's another case that this 
+algorithm doesn't handle well. 
+
+Especially if you use a 19*19 rather than a 3*3 grid. The chance of two objects having the same midpoint rather these 361 cells, it does happen, but it doesn't 
+happen that often. So finally, how do you choose the anchor boxes? And people used to just choose them by hand or choose maybe 5 or 10 anchor box shapes that 
+spans a variety of shapes that seems to cover the types of objects you seem to detect. As a much more advanced version, just in the advance common for those of 
+who have other knowledge in machine learning, and even better way to do this in one of the later YOLO research papers, is to use a K-means algorithm, to group 
+together two types of objects shapes you tend to get. And then to use that to select a set of anchor boxes that this most stereotypically representative of the 
+maybe multiple, of the maybe dozens of object causes you're trying to detect. But that's a more advanced way to automatically choose the anchor boxes. And if 
+you just choose by hand a variety of shapes that reasonably expands the set of object shapes, you expect to detect some tall, skinny ones, some fat, white ones. 
+That should work with these as well. So that's it for anchor boxes. 
+
+$$$$$$$$$$$$$$$$$$$$ YOLO Algorithm
+To construct the training set, you go through each of these 9 grid cells and form the appropriate target vector y. So take this first grid cell, there's nothing
+worth detecting in that grid cell. None of the three classes pedestrian, car and motocycle, appear in the upper left grid cell and so, the target y corresponding
+to that grid cell would be equal to this.
+
+$$$$$$$$$$$$$$$$$$$$$ Region proposal - Region-CNN
+what that does is it tries to pick just a few regions that makes sense to run your convnet classifier. So rather than running your sliding windows on every 
+single window, you instead select just a few windows and run your convnet classifier on just a few windows. The way that they perform the region proposals is 
+to run an algorithm called a segmentation algorithm, that results in this output on the right, in order to figure out what could be objects.So, for example, 
+the segmentation algorithm finds a blob over here. And so you might pick that bounding balls and say, "Let's run a classifier on that blob." It looks like this 
+little green thing finds a blob there, as you might also run the classifier on that rectangle to see if there's some interesting there. And in this case, this 
+blue blob, if you run a classifier on that. what you do is you find maybe 2000 blobs and place bounding boxes around about 2000 blobs and value classifier on 
+just those 2000 blobs. 
+
+So just to be clear, the R-CNN algorithm doesn't just trust the bounding box it was given. It also outputs a bounding box, Bx,BY,BH,BW in order to get a more 
+accurate bounding box and whatever happened to surround the blob that the image segmentation algorithm gave it. So it can get pretty accurate bounding boxes.
+
+#################################################################### Week4 ####################################################
+
+--------------------------------------------------------- Face recognition & Neural style transfer
+$$$$$$$$$$$$$$$$$$$$ One shot learning
+One of the challenges of face recognition is that you need to solve the one-shot learning problem. What that means is that for most face recognition 
+applications you need to be able to recognize a person given just one single image, or given just one example of that person's face.
+
+you have such a small training set(5 images) it is really not enough to train a robust neural network for this task. And also what if a new person joins your 
+team? So now you have 5 persons you need to recognize, so there should now be six outputs. Do you have to retrain the ConvNet every time? That just doesn't 
+seem like a good approach. 
+
+$$$$$$$$$$$$$$$$ Siamese network
+The job of the function d, which you learned about in the last video, is to input two faces and tell you how similar or how different they are. A good way to do 
+this is to use a Siamese network. Let's take a look.
+
+We dont use softmax function here. I'm going to give this list of 128 numbers a name. I'm going to call this f(x1), and you should think of f(x1) as an encoding 
+of the input image x1. 
+
+$$$$$$$$$$$$$$$$$$$$ Triplet loss
+which is that you'll always be looking at three images at a time. You'll be looking at an anchor image, a positive image, as well as a negative image. And I'm 
+going to abbreviate anchor,positive and negative as A, P, and N. 
+
+Now, how do you actually choose these triplets to form your training set?
+One of the problems if you choose A, P, and N randomly from your training set subject to A and P being from the same person, and A and N being different persons,
+one of the problems is that if you choose them so that they're at random, then this constraint is very easy to satisfy. Because given two randomly chosen 
+pictures of people, chances are A and N are much different than A and P.
+
+$$$$$$$$$$$$$$$$$$$$$ Face Verification and Binary Classification
+siamese network will output 
+1-->  if both of these are the same persons, and 0-->  if both of these are of different persons.  So, this is a way to treat face recognition just as a binary 
+classification problem. And this is an alternative to the triplet loss for training a system like this. 
+Now, what does this final logistic regression unit actually do? 
+In this notation, f(x i) is the encoding of the image x i and the substitute k means to just select out the kth components of this vector. This is taking the 
+element Y's difference in absolute values between these two encodings. 128 means 128 numbers as features that you then feed into logistic regression.
+
+so, when the new employee walks in, what you can do is use this upper components to compute that encoding and use it, then compare it to your pre-computed 
+encoding and then use that to make a prediction y hat. Because you don't need to store the raw images and also because if you have a very large database of 
+employees, you don't need to compute these encodings every single time for every employee database. This idea of free computing, some of these encodings can 
+save a significant computation.
+
+--------------------------------------------------------- Neural style transfer
+
+$$$$$$$$$$$$$$$$$$$$$  What are deep ConvNets learning
+So this is nine different representative neurons and for each of them the nine image patches that they maximally activate on. So this gives you a sense that, 
+units, train hidden units in layer 1, they're often looking for relatively simple features such as edge or a particular shade of color. And all of the examples 
+I'm using in this video come from this paper by Mathew Zeiler and Rob Fergus, titled visualizing and understanding convolutional networks.
+
+Now you have repeated this procedure several times for nine hidden units in layer 1. What if you do this for some of the hidden units in the deeper layers of 
+the neuron network.  And what does the neural network then learning at a deeper layers. So in the deeper layers, a hidden unit will see a larger region of the 
+image. Where at the extreme end each pixel could hypothetically affect the output of these later layers of the neural network. So later units are actually seen 
+larger image patches, I'm still going to plot the image patches as the same size on these slides. 
+
+So this visualization shows nine hidden units in layer 2, and for each of them shows nine image patches that causes that hidden unit to have a very large output, 
+a very large activation.
+
+So we've gone a long way from detecting relatively simple things such as edges in layer 1 to textures in layer 2, up to detecting very complex objects in the 
+deeper layers. So I hope this gives you some better intuition about what the shallow and deeper layers of a neural network are computing.
+
+$$$$$$$$$$$$$$$$$$$$$$$ Cost function
+we're going to define two parts to this cost function. The first part is called the content cost.This is a function of the content image and of the generated 
+image and what it does is it measures how similar is the contents of the generated image to the content of the content image C. And then going to add that to a 
+style cost function which is now a function of S,G and what this does is it measures how similar is the style of the image G to the style of the image S.
+
+$$$$$$$$$$$$$$$$$$$$$$$ Content Cost Function
+layers l neither too shallow nor too deep.
+
+$$$$$$$$$$$$$$$$$$$$$ Style Cost Function
+Let's look at the first two channels. Let's see for the red channel and the yellow channel and say how correlated are activations in these first two channels.
